@@ -1,0 +1,256 @@
+@charset "utf-8";
+body {
+	/*
+	background: #003060;
+	color: #EBEBEB;
+	*/
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+
+.title {
+	font-size: 2em;
+}
+
+.subTitle {
+	font-size: 1.4em;
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.left {
+	text-align: left;
+}
+
+.center {
+	text-align: center;
+}
+
+.right {
+	text-align: right;
+}
+
+.error {
+	color: #FF0000;
+}
+
+.tablePadding tr td {
+	padding: 3px 6px;
+}
+
+.bN {
+	border-top: #000000 solid 1px;
+}
+
+.bE {
+	border-right: #000000 solid 1px;
+}
+
+.bS {
+	border-bottom: #000000 solid 1px;
+}
+
+.bW {
+	border-left: #000000 solid 1px;
+}
+
+.tableBorder tr:first-child td {
+    border-top: #000000 solid 1px;
+}
+
+.tableBorder tr td:first-child {
+    border-left: #000000 solid 1px;
+}
+
+.tableBorder tr td {
+    border-right: #000000 solid 1px;
+    border-bottom: #000000 solid 1px;
+}
+
+.tableBorderSlim tr:first-child td {
+    border-top: #000000 solid 1px;
+    border-bottom: #000000 solid 1px;
+}
+
+.tableBorderSlim tr td:first-child {
+    border-left: #000000 solid 1px;
+}
+
+.tableBorderSlim tr td {
+    border-right: #000000 solid 1px;
+}
+
+.tableBorderSlim tr.forceN td {
+    border-top: #000000 solid 1px;
+}
+
+.tableBorderSlim tr.forceS td {
+    border-bottom: #000000 solid 1px;
+}
+
+.ui-custom-error {
+	margin-top: 5px;
+	background: red;
+}
+
+.container {
+	border: 1px solid green;
+	background-color: #EAEAEA;
+	padding: 10px 10px 25px 10px;
+}
+
+fieldset {
+	border: 1px solid green;
+	background-color: #EAEAEA;
+}
+
+legend {
+	padding: 0.2em 0.5em;
+	border: 1px solid green;
+	color: green;
+	font: Verdana, Geneva, sans-serif;
+	font-size: 105%;
+	text-align: left;
+	background-color: #CCF;
+}
+
+th {
+	padding: 0.2em 0.5em;
+	color: green;
+	font: Verdana, Geneva, sans-serif;
+	font-size: 100%;
+	text-align: center;
+	background-color: #CCF;
+
+    border-top: 1px solid green;
+    border-right: 1px solid green;
+    border-bottom: 1px solid green;
+}
+
+th:first-child {
+    border: 1px solid green;
+}
+
+.noWrap {
+	white-space: nowrap;
+}
+
+input {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #0000FF;
+}
+
+select {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #0000FF;
+}
+
+.evenRow {
+	background-color: #fffacd;
+}
+
+.oddRow {
+
+}
+
+.itemRow:hover {
+	background-color: #fffacd;
+}
+
+.smallTablePadding tr td {
+	padding: 1px 2px;
+}
+
+.medSeparator {
+    display: inline-block;
+    width: 40px;
+}
+
+
+.button {
+    appearance: button;
+    -moz-appearance: button;
+    -webkit-appearance: button;
+    text-decoration: none;
+    color: blue;
+    display: inline-block;
+    padding: 1px 12px;
+    cursor: default;
+}
+
+/*
+ tabel
+*/
+
+.list {
+    border-collapse: collapse;
+    width: 100%;
+    border-top: 1px solid #BFBFBF;
+    border-left: 1px solid #BFBFBF;
+    margin-bottom: 20px;
+    font-family: Tahoma;
+    font-size: 8pt;
+    padding-top:5px;
+}
+.list td {
+    border-right: 1px solid #DDDDDD;
+    border-bottom: 1px solid #DDDDDD;
+}
+.list thead td {
+    background-color: #E5E5E5;
+    padding: 0px 5px; text-transform: capitalize;
+}
+.list thead td a, .list thead td {
+    text-decoration: none;
+    color: #000000;
+    font-weight: bold;
+
+}
+.list tbody a {
+    text-decoration: none;
+}
+.list tbody td {
+    vertical-align: middle;
+    padding: 0px 5px;
+}
+.list tbody tr:odd {
+    background: #FFFFFF;
+}
+.list tbody tr:even {
+    background: #E4EEF7;
+}
+.list .left {
+    text-align: left;
+    padding: 7px;
+}
+.list .right {
+    text-align: right;
+    padding: 7px;
+}
+.list .center {
+    text-align: center;
+    padding: 7px;
+}
+.list .asc {
+    padding-right: 15px;
+    background: url('images/asc.png') right center no-repeat;
+}
+.list .desc {
+    padding-right: 15px;
+    background: url('images/desc.png') right center no-repeat;
+}
+.blink {
+    animation-duration: 1s;
+    animation-name: blink;
+    animation-iteration-count: infinite;
+    animation-timing-function: steps(2, start);
+}
+@keyframes blink {
+    80% {
+        visibility: hidden;
+    }
+}

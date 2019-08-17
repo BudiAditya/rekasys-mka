@@ -1,0 +1,168 @@
+Version File of the MVC Framework by Wayan Budiasa.
+
+Version Log :
+5.1
++ New interface IRouterHook for controlling router sequence can be defined in user.config.php
++ New class SimpleRouterHook which re-routing all user request into specific controller and method. This class by default used by maintenance mode (can be changed to other class).
+
+* Application can be running in maintenance mode by additional configuration: maintenance.config.php
+* Router class will obey maintenance mode and act accordingly (Because of IRouterHook)
+* User request extraction implementation changed. Now using new class RouteData. Namespace, Controller, Method and Parameters now stored at this class.
+ 	RouteData is accessible from Router Class by Router::GetRouteData()
+	Backward compatibilty is maintained. All router property related to user request will be obtained from this class
+
+5.0 (NOT BACKWARD COMPATIBLE because renaming basic function)
+* Dispatcher concept overhaul (some is not backward compatible):
+	1. Now every user request / method dispatch handled by specific instance of dispatcher. YES DISPATCHER class not singleton anymore but still static class
+	2. Dispatcher::CreateInstance renamed to Dispatcher::CreateInstance because this class is not singleton anymore
+	3. Dispatcher::Redirect and Dispatcher::RedirectUrl now static method
+* Class documentation updated...
++ DotNetTools library, this contains some .net concept(s) or method(s) which useful
+
+4.5.1
+* NamedParameters now accessible at AppController::Initialize(). Before this fix namedParameters variable always empty array.
+
+4.5 (2012-12-12)
++ PostreSql Driver Support
+
+4.3.1 (2012-01-16)
+* Tweak AclBase::CheckUserAccess(). Now this method is declared as public instead of abstract (Overridable). All derived class implementation removed (except AnonymousAcl) for unity
+
+4.3 (2011-12-14)
+* ConnectorBase::AddParameter() now can accept third parameter for define datatype of the given value. In case you need to specify datatype of a value please use the third parameter
+* SqlParameter class used in internal system for generating query using AddParameter
+	NOTE: No user application code need to be updated ! It's in system level and will not interfere with existing user code. Instead it's add more capabilities to user code
+
+4.2.3 (2011-11-21)
+* EOF for non view file changed ! PHP end tag not used anymore because invisible character after end tag can cause unwanted error !
+	NOTE: this should not affect your apps. It's recommended to remove php end tag from all NON VIEW file (controller, model, library, config, etc)
+* VIEW for ErrorController tweaked :)
+
+4.2.2 (2011-11-17)
+* Rework for ErrorController VIEW, home/index.php
+* Remove index() and generic() from ErrorController (NOT USED BY SYSTEM AT ALL)
+
+4.2.1 (2011-11-04)
+* SqlAcl path now support for comma separated ACL both user and group access control.
+* Bypassing controller now handled by AclManager instead of Dispatcher class. Bypassing controller handled by class derived from AclBase (using CheckUserAccess() method)
+	NOTE: Still backward compatible with Dispatcher class (will be removed when major version released)
+
+4.2 (2011-10-28)
+* Default connector now accessible from connection pool. Default name for these connector is 'default' which can be changed when calling ConnectorManager::CreateDefaultConnector($settings, "connector name");
+	NOTE: Now you can retrieve default connetor instance in this way: ConnectorManager::GetPool('default');
++ Add new feature Dispatcher::AddAclBypassAfterAuthenticated(), Dispatcher::RemoveAclBypassAfterAuthenticated() and Dispatcher::GetAclBypassAfterAuthenticated()
+	These feature basicly have same usage with ACL bypass function BUT differ in code execution. As name implied 'AfterAuthenticated' these bypassed controller only bypassed if user already authenticated.
+	An authenticated user means that we already calling AclBase::Authenticate() and returning true then user automatically authenticated and stored in CurrentUser property.
+	Please note that calling AclBase::SerializeUser() is required to persist user between request or session.
++ A way to differenciate between regular request and AJAX request. Please check Router::IsAjaxRequest property. (Should work on newer browser)
+
+4.1 (2011-10-24)
+* Fix SqlAcl not worked because new ReaderBase class implemented in Connector
+* Fix ReaderBase class: not able to access property from derived class because declared as private
+* ErrorController now have db_error() which called whenever database error occurred. This must be implemented by calling RaiseErrorIfRequired() in class which derived from ConnectorBase
+* ConnectorSettings have a lot of improvement for error handling (SuppressPhpError, RaiseConnectionError, RaiseQueryError, UseSqlException, DuplicateRaiseError)
+	NOTE: database.config.php CHANGED !!! because of new structure of ConnectorSettings for error related setting (sorry for the inconvenience)
+* ConnectorManager loading driver related changed a bit. Now driver type included in ConnectorSettings instead of parameter
+
+4.0 (2011-10-23)
+* Overhaul in Connector / Database related ! Now I implement driver mechanism and specific reader class
+	NOTE: in previous also implement driver mechanism but not 100% driver mechanism because connector (driver) is not in specific folder
+* Typos and Bug Fix in 3.3.6 causing looping in ACL
+* Add flexigrid_helper.php (Flexigrid bridge for create javascript)
+
+3.3.6 (2011-10-19)
+* Fix in Dispatcher Enumeration for InitializeResource()
+* Framework now support for controller without VIEW. Now by default controller doesn't need respective VIEW file but this can be force be set MustHaveView property to true
+
+3.3.5 (2011-10-18)
+* SqlAcl now support for custom field(s) in User and Group (configurable in sql_acl.config.php)
+
+3.3.4 (2011-10-17)
+* Client IP Address (accessible from Router class)
+* ConnectorSettings now have option to suppress database error (must be implemented by class derived from ConnectorBase)
+
+3.3.3 (2011-10-13)
+* SqlAcl now support for custom table name
+
+3.3.2 (2011-10-07)
+* Some value from system.config.php moved to user.config.php (DEfAULT_CONTROLLER, DEFAULT_METHOD, and FOLDER)
+
+3.3.1 (2011-04-18)
+* Typo Fixing in CORE system. WARNING ! For upgrading please refactor all of your reference from 'persistance' into 'persistence' for class name and folder location !
+* ConnectorBase::ExecuteStoredProcedure($procedureName) dropped.
++ Added ConnectorBase::GenerateLastQuery($performParameterSubstitution = true). As the name implied this function used to generate last given query (useful for debugging process).
++ Ability to use more than one Connector ! Please Check ConnectorManager::CreatePool(), ConnectorManager::GetPool(), ConnectorManager::DestroyPool()
+
+3.3 (2011-04-06)
+* EntityBase class overriding PHP (un)serialization mechanism using Serializable interface. (Fixing BUG causing ConnectorBase class failed when unserialized)
+
+3.2.1 (2011-03-01)
+* Anonymous User Removed from user database. ACL for anonymous access now using 'null' object instead of concrete User Object
+* Added more enumeration in ACL Checking in Dispatcher ! Now Support for 'not_allowed' which mean user already login but not allowed to access by ACL
+* Now 'not_auth' in ACL act as error whenever anonymous user try to access protected resource(s)
+
+3.2 (2011-01-27)
+* AppController function index() should be public
+* SqlAcl class changes in DBase format
+
+3.1.3 (2010-11-12)
+* MySQLi Connector now support array as parameter for IN query syntax. Just pass the array and it will be automatically escaped
+* Changes to ConnectorBase to give more flexibility
+
+3.1.2 (2010-11-12)
+* Dispacther->Redirect() now automatically terminate PHP Script Execution and clearing all output buffer
+* Add new Enumeration for dispatching controller 'MissingFile' for loading controller file
+	Note: Now we able to detect the loading process more accurate ! Whenever the file missing or the class definition is not found
+* UPDATE WARNING: Since there is changes in ErrorController class then you must update your ErrorController also
+	1. Add a new function missing_file($controllerName, $namespace = "")
+	2. Add the view file (missing_file.php) in the view/error folder
+
+3.1 (2010-11-05)
+* Improved algorithm for ACL checking. Now support namespace wildcard
+* Some access modifier for core classes
+* TODO: Controller have flag to determine whetever view is compulsory or not
+* TODO: Router capability for routing and flexible namespace support (using actual folder path instead of dotted naming)
+
+3.0.2 (2010-11-04, Development only)
++ Ability to bypass certain controller from checked against ACL (Using Dispacher class and defined in system.config.php and user.config.php)
+
+3.0.1 (2010-11-04, Development only)
+* MysqliAcl renamed to SqlAcl and get tweaked in code. If you were use this class before please update the your config and delete mysqli_acl.php
+	Note: there is some column name changes
+		- 'username' changed into 'users'
+		- 'group' changed into 'group'
+
+3.0 (2010-10-30)
+* Router class now support for namespace using slash
+
+2.9 (2010-10-30)
++ Router class to handling user request and MVC extraction
+- Dispacther class function to dispatch URL (not inflicting your apps because it's core framework function) because replaced by Router
+* TODO: Controller have flag to determine whetever view is compulsory or not
+* TODO: Router capability for routing and flexible namespace support (using actual folder path instead of dotted naming)
+	Note : Router work in progress....
+
+2.8 (2010-10-30)
+* Seperation between system config and user config
+
+2.7 (2010-10-29)
+* Using global variable for referencing folder instead of hard coded every places (hard to edit) and preparation for Loader class
+* Moving 'MVC' folder to 'apps' folder and fixing references
+* Bug fix in class creation with namespace support (if the class using namespace the creation will be failed becuase created in default namespace)
+* Model have access to database via $connector variable from EntityBase class
+* TODO: Controller have flag to determine whetever view is compulsory or not
+* TODO: Router capability for routing and flexible namespace support (using actual folder path instead of dotted naming)
+
+2.5 (2010-09-03)
++ Error handling capabilities
++ Namespace concept for classes in Controller and View
+* MySqliConnector -> incorrectly bind parameter in query generation
+
+2.0 
++ DEBUG constant in configure.php to determine whether we should run as DEBUG mode or not
++ MysqliAcl -> Acl using MySql Server as backend. (sample server script included.)
+* SimpleAcl -> Username and Group File format changed to make easy reading
+* Experimental code to automatically determine FOLDER constant
+* A Lot of Bug Fix
+
+[Not available before this release because to many changes]
