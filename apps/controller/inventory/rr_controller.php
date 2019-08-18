@@ -67,11 +67,13 @@ class RrController extends AppController {
                 $settings["actions"][] = array("Text" => "BATAL APPROVAL DEPT HEAD", "Url" => "inventory.rr/disapprove/1/", "Class" => "bt_reject", "ReqId" => 2,
                     "Error" => "Mohon memilih sekurang-kurangnya satu RR !",
                     "Confirm" => "Proses Batal Approval Level 1?");
+            }
+            if ($acl->CheckUserAccess("rr", "verify", "inventory")) {
                 $settings["actions"][] = array("Text" => "separator", "Url" => null);
-                $settings["actions"][] = array("Text" => "APPROVAL PM", "Url" => "inventory.rr/approve/2/%s", "Class" => "bt_approve", "ReqId" => 1,
+                $settings["actions"][] = array("Text" => "APPROVAL PM", "Url" => "inventory.rr/verify/2/%s", "Class" => "bt_approve", "ReqId" => 1,
                     "Error" => "Mohon pilih TEPAT satu dokumen RR !\nTidak boleh memilih lebih dari 1 dokumen.",
                     "Confirm" => "Proses Approval Level 2?");
-                $settings["actions"][] = array("Text" => "BATAL APPROVAL PM", "Url" => "inventory.rr/disapprove/2/", "Class" => "bt_reject", "ReqId" => 2,
+                $settings["actions"][] = array("Text" => "BATAL APPROVAL PM", "Url" => "inventory.rr/unverify/2/", "Class" => "bt_reject", "ReqId" => 2,
                     "Error" => "Mohon memilih sekurang-kurangnya satu RR !",
                     "Confirm" => "Proses Batal Approval Level 2?");
             }
@@ -565,7 +567,7 @@ class RrController extends AppController {
         $this->Set("suppliers", $suppliers);
     }
 
-    public function approve($lvl = 0, $rrId = 0) {
+    public function approve($lvl = 1, $rrId = 0) {
         require_once(MODEL . "master/department.php");
         require_once(MODEL . "master/project.php");
 
@@ -629,7 +631,120 @@ class RrController extends AppController {
         $this->Set("rr", $rr);
     }
 
-    public function disapprove($lvl = 0) {
+    public function disapprove($lvl = 1) {
+        $ids = $this->GetGetValue("id", array());
+
+        if (count($ids) == 0) {
+            $this->persistence->SaveState("error", "Maaf anda tidak memilih dokumen RR yang akan di batalkan !");
+            redirect_url("inventory.rr");
+            return;
+        }
+
+        $infos = array();
+        $errors = array();
+        $userId = AclManager::GetInstance()->GetCurrentUser()->Id;
+        foreach ($ids as $id) {
+            $rr = new Rr();
+            $rr = $rr->LoadById($id);
+
+            if ($lvl == 1) {
+                if ($rr->StatusCode != 2) {
+                    $errors[] = sprintf("Dokumen RR: %s tidak diproses karena status sudah bukan APPROVED1 ! Status : %s", $rr->DocumentNo, $rr->GetStatus());
+                    continue;
+                }
+            }elseif ($lvl == 2){
+                if ($rr->StatusCode != 3) {
+                    $errors[] = sprintf("Dokumen RR: %s tidak diproses karena status sudah bukan APPROVED2 ! Status : %s", $rr->DocumentNo, $rr->GetStatus());
+                    continue;
+                }
+            }else{
+                $errors[] = sprintf("Dokumen RR: %s tidak diproses ! Status : %s", $rr->DocumentNo, $rr->GetStatus());
+                continue;
+            }
+
+            $rr->UpdatedById = $userId;
+            $rs = $rr->DisApprove($id,$lvl);
+            if ($rs != -1) {
+                $infos[] = sprintf("Dokumen RR: %s sudah berhasil di dibatalkan (Disapprove-%d)", $rr->DocumentNo,$lvl);
+            } else {
+                $errors[] = sprintf("Gagal Membatalkan / Disapprove Dokumen RR: %s. Message: %s", $rr->DocumentNo, $this->connector->GetErrorMessage());
+            }
+        }
+
+        if (count($infos) > 0) {
+            $this->persistence->SaveState("info", "<ul><li>" . implode("</li><li>", $infos) . "</li></ul>");
+        }
+        if (count($errors) > 0) {
+            $this->persistence->SaveState("error", "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>");
+        }
+        redirect_url("inventory.rr");
+    }
+
+    public function verify($lvl = 2, $rrId = 0) {
+        require_once(MODEL . "master/department.php");
+        require_once(MODEL . "master/project.php");
+
+        $loader = null;
+        $rr = new Rr();
+        if ($rrId > 0 ) {
+            $rr = $rr->LoadById($rrId);
+            if ($rr == null) {
+                $this->persistence->SaveState("error", "Maaf, Data P/R dimaksud tidak ada pada database. Mungkin sudah dihapus!");
+                redirect_url("inventory.rr");
+            }
+        }else{
+            $this->persistence->SaveState("error", "Maaf, Data P/R tidak ditemukan!");
+            redirect_url("inventory.rr");
+        }
+
+        if (count($this->postData) > 0) {
+            $applvl = $this->GetPostValue("AppLevel");
+            $rr->ApprovedById = AclManager::GetInstance()->GetCurrentUser()->Id;
+            if ($rr->Approve($rrId,$applvl)){
+                $this->persistence->SaveState("info", "Proses Approval berhasil!");
+            }else{
+                $this->persistence->SaveState("error", "Maaf, Proses Approval gagal!");
+            }
+            redirect_url("inventory.rr");
+        }else{
+            if ($lvl == 1){
+                if ($rr->StatusCode <> 1 ){
+                    $this->persistence->SaveState("error", "P/R Tidak berstatus -DRAFT-, tidak boleh di-Approve Level-1!");
+                    redirect_url("inventory.rr");
+                }
+            }elseif ($lvl == 2){
+                if ($rr->StatusCode <> 2 ){
+                    $this->persistence->SaveState("error", "P/R Tidak berstatus -DH APPROVED-, tidak boleh di-Approve Level-2!");
+                    redirect_url("inventory.rr");
+                }
+            }else{
+                $this->persistence->SaveState("error", "Maaf, Proses Approval tidak valid!");
+                redirect_url("inventory.rr");
+            }
+
+        }
+        // load details
+        $rr->LoadDetails();
+        //load project
+        $project = new Project();
+        if ($this->userLevel < 5) {
+            $projects = $project->LoadAllowedProject($this->userProjectIds);
+        }else{
+            $projects = $project->LoadByEntityId($this->userCompanyId);
+        }
+        //load department
+        $department = new Department();
+        $departments = $department->LoadByEntityId($this->userCompanyId);
+        //send to view
+        $acl = AclManager::GetInstance();
+        $this->Set("acl", $acl);
+        $this->Set("level", $lvl);
+        $this->Set("departments", $departments);
+        $this->Set("projects", $projects);
+        $this->Set("rr", $rr);
+    }
+
+    public function unverify($lvl = 2) {
         $ids = $this->GetGetValue("id", array());
 
         if (count($ids) == 0) {

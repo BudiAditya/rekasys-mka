@@ -25,7 +25,10 @@ class MrController extends AppController {
 		$settings["columns"][] = array("name" => "a1.project_name", "display" => "Project", "width" => 100);
 		$settings["columns"][] = array("name" => "a.doc_no", "display" => "MR Number", "width" => 120);
 		$settings["columns"][] = array("name" => "DATE_FORMAT(a.mr_date, '%d %M %Y')", "display" => "MR Date", "width" => 100, "sortable" => false);
-		$settings["columns"][] = array("name" => "d.short_desc", "display" => "Status", "width" => 100);
+        $settings["columns"][] = array("name" => "a.request_by", "display" => "Request By", "width" => 80);
+		$settings["columns"][] = array("name" => "b.dept_name", "display" => "Dept", "width" => 150);
+        $settings["columns"][] = array("name" => "e.short_desc", "display" => "Level", "width" => 100);
+        $settings["columns"][] = array("name" => "d.short_desc", "display" => "Status", "width" => 100);
 		$settings["columns"][] = array("name" => "DATE_FORMAT(a.update_time, '%d %M %Y')", "display" => "Last Update", "width" => 100, "sortable" => false);
 
 		$settings["filters"][] = array("name" => "a.doc_no", "display" => "Doc Number");
@@ -91,7 +94,8 @@ class MrController extends AppController {
     JOIN cm_project AS a1 ON a.project_id = a1.id
 	LEFT JOIN cm_dept AS b ON a.dept_id = b.id
 	JOIN cm_company AS c ON b.entity_id = c.entity_id
-	JOIN sys_status_code AS d ON a.status = d.code AND d.key = 'mr_status'";
+	JOIN sys_status_code AS d ON a.status = d.code AND d.key = 'mr_status'
+	JOIN sys_status_code AS e ON a.req_level = e.code AND e.key = 'mr_req_level'";
 			if ($this->userLevel < 5){
 			    $settings["where"] = "a.is_deleted = 0 And Locate(a.project_id,".$this->userProjectIds.")";
             }else {

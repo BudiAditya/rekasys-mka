@@ -22,6 +22,7 @@ class Mr extends EntityBase {
     public $Approve2Time;
 	public $Note;
 	public $RequestBy;
+	public $ReqLevel = 1;
 	public $UpdatedById;
 	public $UpdatedDate;
 	/** @var MrDetail[] */
@@ -55,6 +56,7 @@ class Mr extends EntityBase {
         $this->Approve2Time = strtotime($row["approve2_time"]);
 		$this->Note = $row["notes"];
         $this->RequestBy = $row["request_by"];
+        $this->ReqLevel = $row["req_level"];
 		$this->UpdatedById = $row["updateby_id"];
 		$this->UpdatedDate = strtotime($row["update_time"]);
 
@@ -94,6 +96,22 @@ class Mr extends EntityBase {
 				return "N.A.";
 		}
 	}
+
+    public function GetReqLevel() {
+        if ($this->ReqLevel == null) {
+            return null;
+        }
+        switch ($this->ReqLevel) {
+            case 1:
+                return "NORMAL";
+            case 2:
+                return "MIDDLE";
+            case 3:
+                return "URGENT";
+            default:
+                return "N.A.";
+        }
+    }
 
 	public function FormatDate($format = HUMAN_DATE) {
 		return is_int($this->Date) ? date($format, $this->Date) : date($format);
@@ -186,8 +204,8 @@ ORDER BY a.mr_date ASC";
 
 	public function Insert() {
 		$this->connector->CommandText =
-"INSERT INTO ic_mr_master(request_by,entity_id,project_id,activity_id,doc_no, mr_date, status, dept_id, createby_id, create_time, notes)
-VALUES(?request_by,?entityId,?projectId,?activityId,?docNo, ?date, ?status, ?deptId, ?user, NOW(), ?note)";
+"INSERT INTO ic_mr_master(req_level,request_by,entity_id,project_id,activity_id,doc_no, mr_date, status, dept_id, createby_id, create_time, notes)
+VALUES(?req_level,?request_by,?entityId,?projectId,?activityId,?docNo, ?date, ?status, ?deptId, ?user, NOW(), ?note)";
 		$this->connector->AddParameter("?docNo", $this->DocumentNo);
 		$this->connector->AddParameter("?date", $this->FormatDate(SQL_DATEONLY));
 		$this->connector->AddParameter("?status", $this->StatusCode);
@@ -199,6 +217,7 @@ VALUES(?request_by,?entityId,?projectId,?activityId,?docNo, ?date, ?status, ?dep
 		$this->connector->AddParameter("?user", $this->CreatedById);
 		$this->connector->AddParameter("?note", $this->Note);
         $this->connector->AddParameter("?request_by", $this->RequestBy);
+        $this->connector->AddParameter("?req_level", $this->ReqLevel);
 		$rs = $this->connector->ExecuteNonQuery();
 		if ($rs == 1) {
 			$this->connector->CommandText = "SELECT LAST_INSERT_ID();";
@@ -228,6 +247,7 @@ VALUES(?request_by,?entityId,?projectId,?activityId,?docNo, ?date, ?status, ?dep
 	, project_id = ?projectId
 	, activity_id = ?activityId
 	, request_by = ?request_by
+	, req_level = ?req_level
 WHERE id = ?id";
 		$this->connector->AddParameter("?docNo", $this->DocumentNo);
 		$this->connector->AddParameter("?date", $this->FormatDate(SQL_DATETIME));
@@ -238,6 +258,7 @@ WHERE id = ?id";
         //$this->connector->AddParameter("?unitId", $this->UnitId);
 		$this->connector->AddParameter("?note", $this->Note);
         $this->connector->AddParameter("?request_by", $this->RequestBy);
+        $this->connector->AddParameter("?req_level", $this->ReqLevel);
 		$this->connector->AddParameter("?user", $this->UpdatedById);
 		$this->connector->AddParameter("?id", $id);
 
@@ -291,7 +312,7 @@ WHERE id = ?id";
 	}
 
     public function GetJSonUnfinishedMrItems($projectId = 0, $filter = null,$sort = 'c.item_code',$order = 'ASC') {
-        $sql = "SELECT a.id,a.item_id,c.item_code,c.part_no,c.item_name,a.uom_cd,c.brand_name,c.type_desc,a.app_qty - a.iss_qty as qty,b.doc_no as mr_no,b.mr_date";
+        $sql = "SELECT a.id,a.item_id,c.item_code,c.part_no,c.item_name,a.uom_cd,c.brand_name,c.type_desc,a.app_qty - a.iss_qty as qty,b.doc_no as mr_no,b.mr_date,b.req_level";
         $sql.= " FROM ic_mr_detail as a Join ic_mr_master as b On a.mr_master_id = b.id";
         $sql.= " JOIN vw_ic_item_master AS c ON a.item_id = c.id Where b.is_deleted = 0 And b.status = 4";
         if ($projectId > 0){

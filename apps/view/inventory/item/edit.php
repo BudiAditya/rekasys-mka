@@ -287,8 +287,37 @@
                 </td>
             </tr>
             <tr>
-                <td class="right"><label for="Note">Descriptions :</label></td>
+                <td class="right"><label for="Note">Notes :</label></td>
                 <td><textarea cols="40" rows="2" id="Note" name="Note" style="width:300px;"><?php print($item->Note); ?></textarea></td>
+            </tr>
+            <tr>
+                <td class="right"><label for="OtherItemCode">Other Item Code :</label></td>
+                <td><input type="text" id="OtherItemCode" name="OtherItemCode" maxlength="12" style="width:200px;" value="<?php print($item->OtherItemCode); ?>" onkeyup="this.value = this.value.toUpperCase();"/></td>
+            </tr>
+            <tr>
+                <td class="right"><label for="OtherItemName">Other Item Name :</label></td>
+                <td><input type="text" id="OtherItemName" name="OtherItemName" style="width:300px;" value="<?php print($item->OtherItemName); ?>" onkeyup="this.value = this.value.toUpperCase();"/></td>
+            </tr>
+            <tr>
+                <td class="right"><label for="AddNotes">Description :</label></td>
+                <td><input type="text" id="AddNotes" name="AddNotes" style="width:300px;" value="<?php print($item->AddNotes); ?>"/></td>
+            </tr>
+            <tr>
+                <td class="right"><label for="StockLocationId">Stock Location :</label></td>
+                <td><select id="StockLocationId" name="StockLocationId" style="width:200px;">
+                        <option value="0"></option>
+                        <?php
+                        /** @var $stocklocation StockLocation[] */
+                        foreach ($stocklocation as $location) {
+                            if ($location->Id == $item->StockLocationId) {
+                                printf('<option value="%d" selected="selected">%s - %s</option>', $location->Id, $location->BinCode, $location->LocName);
+                            } else {
+                                printf('<option value="%d">%s - %s</option>', $location->Id, $location->BinCode, $location->LocName);
+                            }
+                        }
+                        ?>
+                    </select>
+                </td>
             </tr>
             <tr>
                 <td class="right"><label for="Obsolete">Non-Aktif :</label></td>

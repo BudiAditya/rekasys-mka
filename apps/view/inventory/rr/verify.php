@@ -125,7 +125,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
         </tr>
         <tr>
             <td colspan="9">
-            <form action="<?php print($helper->site_url("inventory.rr/approve/".$level."/". $rr->Id)); ?>" method="post">
+            <form action="<?php print($helper->site_url("inventory.rr/verify/".$level."/". $rr->Id)); ?>" method="post">
                 <table cellpadding="0" cellspacing="0" class="tablePadding tableBorder" align="left" style="font-size: 12px;font-family: tahoma">
                     <tr>
                         <th colspan="8">R/R Detail</th>
@@ -159,7 +159,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                     <tr>
                         <td colspan="9" valign="middle" align="right">
                             <input type="hidden" name="AppLevel" value="<?php print($level);?>"/>
-                            <button type="submit">APPROVAL DEPT HEAD</button>
+                            <button type="submit">APPROVAL PM</button>
                             &nbsp;&nbsp;&nbsp;
                             <a href="<?php print($helper->site_url("inventory.rr")); ?>">R/R List</a>
                         </td>

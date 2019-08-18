@@ -22,6 +22,7 @@ class Pr extends EntityBase {
     public $DeptCd;
     public $DeptName;
     public $SupplierId = 0;
+    public $ReqLevel = 1;
 
     public $Approve2byId;
     public $Approve2Time;
@@ -61,6 +62,7 @@ class Pr extends EntityBase {
 		$this->ApprovedById = $row["approveby_id"];
 		$this->ApprovedDate = strtotime($row["approve_time"]);
 		$this->Note = $row["note"];
+        $this->ReqLevel = $row["req_level"];
 		$this->UpdatedById = $row["updateby_id"];
 		$this->UpdatedDate = strtotime($row["update_time"]);
 
@@ -90,6 +92,22 @@ class Pr extends EntityBase {
 				return "N.A.";
 		}
 	}
+
+    public function GetReqLevel() {
+        if ($this->ReqLevel == null) {
+            return null;
+        }
+        switch ($this->ReqLevel) {
+            case 1:
+                return "NORMAL";
+            case 2:
+                return "MIDDLE";
+            case 3:
+                return "URGENT";
+            default:
+                return "N.A.";
+        }
+    }
 
 	public function FormatDate($format = HUMAN_DATE) {
 		return is_int($this->Date) ? date($format, $this->Date) : date($format);
@@ -166,8 +184,8 @@ class Pr extends EntityBase {
 
 	public function Insert() {
 		$this->connector->CommandText =
-"INSERT INTO ic_pr_master(supplier_id,dept_id,project_id,doc_no, pr_date, status, entity_id, createby_id, create_time, note)
-VALUES(?supplier_id,?dept_id,?project,?docNo, ?date, ?status, ?sbu, ?user, NOW(), ?note)";
+"INSERT INTO ic_pr_master(req_level,supplier_id,dept_id,project_id,doc_no, pr_date, status, entity_id, createby_id, create_time, note)
+VALUES(?req_level,?supplier_id,?dept_id,?project,?docNo, ?date, ?status, ?sbu, ?user, NOW(), ?note)";
 		$this->connector->AddParameter("?docNo", $this->DocumentNo);
 		$this->connector->AddParameter("?date", $this->FormatDate(SQL_DATEONLY));
 		$this->connector->AddParameter("?status", $this->StatusCode);
@@ -177,6 +195,7 @@ VALUES(?supplier_id,?dept_id,?project,?docNo, ?date, ?status, ?sbu, ?user, NOW()
         $this->connector->AddParameter("?supplier_id", $this->SupplierId);
 		$this->connector->AddParameter("?user", $this->CreatedById);
 		$this->connector->AddParameter("?note", $this->Note);
+        $this->connector->AddParameter("?req_level", $this->ReqLevel);
 
 		$rs = $this->connector->ExecuteNonQuery();
 		if ($rs == 1) {
@@ -212,6 +231,7 @@ VALUES(?supplier_id,?dept_id,?project,?docNo, ?date, ?status, ?sbu, ?user, NOW()
 	, project_id = ?project
 	, dept_id = ?dept_id
 	, supplier_id = ?supplier_id
+	, req_level = ?req_level
 WHERE id = ?id";
 		$this->connector->AddParameter("?docNo", $this->DocumentNo);
 		$this->connector->AddParameter("?date", $this->FormatDate(SQL_DATEONLY));
@@ -221,6 +241,7 @@ WHERE id = ?id";
         $this->connector->AddParameter("?dept_id", $this->DeptId);
         $this->connector->AddParameter("?supplier_id", $this->SupplierId);
 		$this->connector->AddParameter("?note", $this->Note);
+        $this->connector->AddParameter("?req_level", $this->ReqLevel);
 		$this->connector->AddParameter("?user", $this->UpdatedById);
 		$this->connector->AddParameter("?id", $id);
 

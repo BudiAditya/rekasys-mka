@@ -24,7 +24,8 @@ class PrController extends AppController {
         $settings["columns"][] = array("name" => "a.dept_name", "display" => "Dept", "width" => 150);
 		$settings["columns"][] = array("name" => "a.doc_no", "display" => "PR Number", "width" => 120);
 		$settings["columns"][] = array("name" => "DATE_FORMAT(a.pr_date, '%d %M %Y')", "display" => "PR Date", "width" => 100, "sortable" => false);
-		$settings["columns"][] = array("name" => "b.short_desc", "display" => "Status", "width" => 100);
+		$settings["columns"][] = array("name" => "c.short_desc", "display" => "Req Level", "width" => 100);
+        $settings["columns"][] = array("name" => "b.short_desc", "display" => "Status", "width" => 100);
 		$settings["columns"][] = array("name" => "DATE_FORMAT(a.update_time, '%d %M %Y')", "display" => "Last Update", "width" => 100, "sortable" => false);
 
 		$settings["filters"][] = array("name" => "a.doc_no", "display" => "PR Number");
@@ -66,11 +67,13 @@ class PrController extends AppController {
                 $settings["actions"][] = array("Text" => "BATAL APPROVAL DEPT HEAD", "Url" => "inventory.pr/disapprove/1/", "Class" => "bt_reject", "ReqId" => 2,
                     "Error" => "Mohon memilih sekurang-kurangnya satu PR !",
                     "Confirm" => "Proses Batal Approval Level 1?");
+            }
+            if ($acl->CheckUserAccess("pr", "verify", "inventory")) {
                 $settings["actions"][] = array("Text" => "separator", "Url" => null);
-                $settings["actions"][] = array("Text" => "APPROVAL PM", "Url" => "inventory.pr/approve/2/%s", "Class" => "bt_approve", "ReqId" => 1,
+                $settings["actions"][] = array("Text" => "APPROVAL PM", "Url" => "inventory.pr/verify/2/%s", "Class" => "bt_approve", "ReqId" => 1,
                     "Error" => "Mohon pilih TEPAT satu dokumen PR !\nTidak boleh memilih lebih dari 1 dokumen.",
                     "Confirm" => "Proses Approval Level 2?");
-                $settings["actions"][] = array("Text" => "BATAL APPROVAL PM", "Url" => "inventory.pr/disapprove/2/", "Class" => "bt_reject", "ReqId" => 2,
+                $settings["actions"][] = array("Text" => "BATAL APPROVAL PM", "Url" => "inventory.pr/unverify/2/", "Class" => "bt_reject", "ReqId" => 2,
                     "Error" => "Mohon memilih sekurang-kurangnya satu PR !",
                     "Confirm" => "Proses Batal Approval Level 2?");
             }
@@ -80,7 +83,7 @@ class PrController extends AppController {
 
 		} else {
 			// Client sudah meminta data / querying data jadi kita kasi settings untuk pencarian data
-			$settings["from"] = "vw_ic_pr_master AS a JOIN sys_status_code AS b ON a.status = b.code AND b.key = 'pr_status'";
+			$settings["from"] = "vw_ic_pr_master AS a JOIN sys_status_code AS b ON a.status = b.code AND b.key = 'pr_status' LEFT JOIN sys_status_code AS c ON a.req_level = c.code AND c.key = 'mr_req_level'";
             if ($this->userLevel < 5){
                 $settings["where"] = "a.is_deleted = 0 And Locate(a.project_id,".$this->userProjectIds.")";
             }else {
@@ -601,7 +604,71 @@ class PrController extends AppController {
         $this->Set("suppliers", $suppliers);
     }
 
-    public function approve($lvl = 0, $prId = 0) {
+    public function approve($lvl = 1, $prId = 0) {
+        require_once(MODEL . "master/department.php");
+        require_once(MODEL . "master/project.php");
+
+        $loader = null;
+        $pr = new Pr();
+        if ($prId > 0 ) {
+            $pr = $pr->LoadById($prId);
+            if ($pr == null) {
+                $this->persistence->SaveState("error", "Maaf, Data P/R dimaksud tidak ada pada database. Mungkin sudah dihapus!");
+                redirect_url("inventory.pr");
+            }
+        }else{
+            $this->persistence->SaveState("error", "Maaf, Data P/R tidak ditemukan!");
+            redirect_url("inventory.pr");
+        }
+
+        if (count($this->postData) > 0) {
+            $applvl = $this->GetPostValue("AppLevel");
+            $pr->ApprovedById = AclManager::GetInstance()->GetCurrentUser()->Id;
+            if ($pr->Approve($prId,$applvl)){
+                $this->persistence->SaveState("info", "Proses Approval berhasil!");
+            }else{
+                $this->persistence->SaveState("error", "Maaf, Proses Approval gagal!");
+            }
+            redirect_url("inventory.pr");
+        }else{
+            if ($lvl == 1){
+                if ($pr->StatusCode <> 1 ){
+                    $this->persistence->SaveState("error", "P/R Tidak berstatus -DRAFT-, tidak boleh di-Approve Level-1!");
+                    redirect_url("inventory.pr");
+                }
+            }elseif ($lvl == 2){
+                if ($pr->StatusCode <> 2 ){
+                    $this->persistence->SaveState("error", "P/R Tidak berstatus -DH APPROVED-, tidak boleh di-Approve Level-2!");
+                    redirect_url("inventory.pr");
+                }
+            }else{
+                $this->persistence->SaveState("error", "Maaf, Proses Approval tidak valid!");
+                redirect_url("inventory.pr");
+            }
+
+        }
+        // load details
+        $pr->LoadDetails();
+        //load project
+        $project = new Project();
+        if ($this->userLevel < 5) {
+            $projects = $project->LoadAllowedProject($this->userProjectIds);
+        }else{
+            $projects = $project->LoadByEntityId($this->userCompanyId);
+        }
+        //load department
+        $department = new Department();
+        $departments = $department->LoadByEntityId($this->userCompanyId);
+        //send to view
+        $acl = AclManager::GetInstance();
+        $this->Set("acl", $acl);
+        $this->Set("level", $lvl);
+        $this->Set("departments", $departments);
+        $this->Set("projects", $projects);
+        $this->Set("pr", $pr);
+    }
+
+    public function verify($lvl = 2, $prId = 0) {
         require_once(MODEL . "master/department.php");
         require_once(MODEL . "master/project.php");
 
@@ -666,6 +733,55 @@ class PrController extends AppController {
     }
 
     public function disapprove($lvl = 0) {
+        $ids = $this->GetGetValue("id", array());
+
+        if (count($ids) == 0) {
+            $this->persistence->SaveState("error", "Maaf anda tidak memilih dokumen PR yang akan di batalkan !");
+            redirect_url("inventory.pr");
+            return;
+        }
+
+        $infos = array();
+        $errors = array();
+        $userId = AclManager::GetInstance()->GetCurrentUser()->Id;
+        foreach ($ids as $id) {
+            $pr = new Pr();
+            $pr = $pr->LoadById($id);
+
+            if ($lvl == 1) {
+                if ($pr->StatusCode != 2) {
+                    $errors[] = sprintf("Dokumen PR: %s tidak diproses karena status sudah bukan APPROVED1 ! Status : %s", $pr->DocumentNo, $pr->GetStatus());
+                    continue;
+                }
+            }elseif ($lvl == 2){
+                if ($pr->StatusCode != 3) {
+                    $errors[] = sprintf("Dokumen PR: %s tidak diproses karena status sudah bukan APPROVED2 ! Status : %s", $pr->DocumentNo, $pr->GetStatus());
+                    continue;
+                }
+            }else{
+                $errors[] = sprintf("Dokumen PR: %s tidak diproses ! Status : %s", $pr->DocumentNo, $pr->GetStatus());
+                continue;
+            }
+
+            $pr->UpdatedById = $userId;
+            $rs = $pr->DisApprove($id,$lvl);
+            if ($rs != -1) {
+                $infos[] = sprintf("Dokumen PR: %s sudah berhasil di dibatalkan (Disapprove-%d)", $pr->DocumentNo,$lvl);
+            } else {
+                $errors[] = sprintf("Gagal Membatalkan / Disapprove Dokumen PR: %s. Message: %s", $pr->DocumentNo, $this->connector->GetErrorMessage());
+            }
+        }
+
+        if (count($infos) > 0) {
+            $this->persistence->SaveState("info", "<ul><li>" . implode("</li><li>", $infos) . "</li></ul>");
+        }
+        if (count($errors) > 0) {
+            $this->persistence->SaveState("error", "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>");
+        }
+        redirect_url("inventory.pr");
+    }
+
+    public function unverify($lvl = 2) {
         $ids = $this->GetGetValue("id", array());
 
         if (count($ids) == 0) {

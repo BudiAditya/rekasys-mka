@@ -25,13 +25,17 @@ class Item extends EntityBase {
 	public $Qclass = 0;
     public $LUomCode;
     public $UomConversion = 1;
+    public $OtherItemCode;
+    public $OtherItemName;
+    public $AddNotes;
 
     public $UnitTypeName;
     public $UnitBrandName;
     public $CompName;
 
 	// Helper variable
-	//public $EntityCode;
+    public $ProjectId;
+	public $StockLocationId = 0;
 	public $CategoryIsStock;
 
 	public function FillProperties(array $row, $haveExtendedData = false) {
@@ -62,6 +66,9 @@ class Item extends EntityBase {
         $this->Qclass = $row["qclass"];
         $this->LUomCode = $row["l_uom_cd"];
         $this->UomConversion = $row["uom_conversion"];
+        $this->OtherItemCode = $row["other_item_code"];
+        $this->OtherItemName = $row["other_item_name"];
+        $this->AddNotes = $row["add_notes"];
 	}
 
 	/**
@@ -152,8 +159,8 @@ class Item extends EntityBase {
 
 	public function Insert() {
 		$this->connector->CommandText =
-"INSERT INTO ic_item_master(l_uom_cd,uom_conversion,icx_code,qclass,unit_comp_code,sn_no,unit_brand_code,is_discontinue,unit_type_code,entity_id, item_code, item_name, category_id, uom_cd, part_no, barcode, max_qty, min_qty, notes, updateby_id, update_time, asset_category_id)
-VALUES(?l_uom_cd,?uom_conversion,?icx_code,?qclass,?unit_comp_code,?sn_no,?unit_brand_code,?is_discontinue,?unit_type_code,?sbu, ?code, ?name, ?category, ?uom, ?partNo, ?barcode, ?maxQty, ?minQty, ?notes, ?user, NOW(), ?assetCategory)";
+"INSERT INTO ic_item_master(other_item_code,other_item_name,add_notes,l_uom_cd,uom_conversion,icx_code,qclass,unit_comp_code,sn_no,unit_brand_code,is_discontinue,unit_type_code,entity_id, item_code, item_name, category_id, uom_cd, part_no, barcode, max_qty, min_qty, notes, updateby_id, update_time, asset_category_id)
+VALUES(?other_item_code,?other_item_name,?add_notes,?l_uom_cd,?uom_conversion,?icx_code,?qclass,?unit_comp_code,?sn_no,?unit_brand_code,?is_discontinue,?unit_type_code,?sbu, ?code, ?name, ?category, ?uom, ?partNo, ?barcode, ?maxQty, ?minQty, ?notes, ?user, NOW(), ?assetCategory)";
 
 		$this->connector->AddParameter("?sbu", $this->EntityId);
 		$this->connector->AddParameter("?code", $this->ItemCode, "varchar");
@@ -176,12 +183,15 @@ VALUES(?l_uom_cd,?uom_conversion,?icx_code,?qclass,?unit_comp_code,?sn_no,?unit_
         $this->connector->AddParameter("?qclass", $this->Qclass);
         $this->connector->AddParameter("?l_uom_cd", $this->LUomCode);
         $this->connector->AddParameter("?uom_conversion", $this->UomConversion);
+        $this->connector->AddParameter("?other_item_code", $this->OtherItemCode);
+        $this->connector->AddParameter("?other_item_name", $this->OtherItemName);
+        $this->connector->AddParameter("?add_notes", $this->AddNotes);
 		$result = $this->connector->ExecuteNonQuery();
 		if ($result == 1) {
 			$this->connector->CommandText = "SELECT LAST_INSERT_ID()";
 			$this->Id = $this->connector->ExecuteScalar();
+			$this->UpdateStockLocation();
 		}
-
 		return $result;
 	}
 
@@ -209,6 +219,9 @@ VALUES(?l_uom_cd,?uom_conversion,?icx_code,?qclass,?unit_comp_code,?sn_no,?unit_
 	, qclass = ?qclass
 	, l_uom_cd = ?l_uom_cd
 	, uom_conversion = ?uom_conversion
+	, other_item_code = ?other_item_code
+	, other_item_name = ?other_item_name
+	, add_notes = ?add_notes
 WHERE id = ?id";
 
 		$this->connector->AddParameter("?sbu", $this->EntityId);
@@ -232,9 +245,13 @@ WHERE id = ?id";
         $this->connector->AddParameter("?qclass", $this->Qclass);
         $this->connector->AddParameter("?l_uom_cd", $this->LUomCode);
         $this->connector->AddParameter("?uom_conversion", $this->UomConversion);
+        $this->connector->AddParameter("?other_item_code", $this->OtherItemCode);
+        $this->connector->AddParameter("?other_item_name", $this->OtherItemName);
+        $this->connector->AddParameter("?add_notes", $this->AddNotes);
 		$this->connector->AddParameter("?id", $id);
-
-		return $this->connector->ExecuteNonQuery();
+		$rs = $this->connector->ExecuteNonQuery();
+		$this->UpdateStockLocation();
+        return $rs;
 	}
 
 	public function Delete($id) {
@@ -273,6 +290,19 @@ WHERE id = ?id";
         }
         $result = array('total'=>$data['count'],'rows'=>$rows);
         return $result;
+    }
+
+    public function UpdateStockLocation(){
+        $itemId = $this->Id;
+        $locationId = $this->StockLocationId;
+        $projectId = $this->ProjectId;
+        $this->connector->CommandText = "Delete From ic_item_location WHERE item_id = $itemId And project_id = $projectId";
+        $rs = $this->connector->ExecuteNonQuery();
+        if ($itemId > 0 && $locationId > 0) {
+            $this->connector->CommandText = "Insert Into ic_item_location (project_id, item_id, location_id) Values ($projectId,$itemId,$locationId)";
+            $rs = $this->connector->ExecuteNonQuery();
+        }
+        return $rs;
     }
 }
 

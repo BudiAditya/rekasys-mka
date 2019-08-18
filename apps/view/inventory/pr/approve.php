@@ -159,7 +159,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                     <tr>
                         <td colspan="9" valign="middle" align="right">
                             <input type="hidden" name="AppLevel" value="<?php print($level);?>"/>
-                            <button type="submit">APPROVAL <?php print($level);?></button>
+                            <button type="submit">APPROVAL DEPT HEAD</button>
                             &nbsp;&nbsp;&nbsp;
                             <a href="<?php print($helper->site_url("inventory.pr")); ?>">P/R List</a>
                         </td>

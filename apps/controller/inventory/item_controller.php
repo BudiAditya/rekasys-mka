@@ -2,10 +2,12 @@
 
 class ItemController extends AppController {
 	private $userCompanyId;
+    private $userProjectId;
 
 	protected function Initialize() {
 		require_once(MODEL . "inventory/item.php");
 		$this->userCompanyId = $this->persistence->LoadState("entity_id");
+        $this->userProjectId = $this->persistence->LoadState("project_id");
 	}
 
 	public function index() {
@@ -27,6 +29,12 @@ class ItemController extends AppController {
 		//$settings["columns"][] = array("name" => "a.max_qty", "display" => "Max Qty", "width" => 60, "align" => "right");
 		//$settings["columns"][] = array("name" => "a.min_qty", "display" => "Min Qty", "width" => 60, "align" => "right");
 		$settings["columns"][] = array("name" => "CASE WHEN a.is_discontinue = 0 THEN 'Active' ELSE 'InActive' END", "display" => "Status", "width" => 60);
+        $settings["columns"][] = array("name" => "a.other_item_code", "display" => "Other Code", "width" => 80);
+        $settings["columns"][] = array("name" => "a.other_item_name", "display" => "Other Name", "width" => 150);
+        $settings["columns"][] = array("name" => "a.add_notes", "display" => "Description", "width" => 200);
+        $settings["columns"][] = array("name" => "a.notes", "display" => "Notes", "width" => 200);
+        $settings["columns"][] = array("name" => "d.loc_name", "display" => "Location", "width" => 100);
+        $settings["columns"][] = array("name" => "d.bin_code", "display" => "Bin Code", "width" => 100);
 
 		$settings["filters"][] = array("name" => "a.item_code", "display" => "Item Code");
 		$settings["filters"][] = array("name" => "a.item_name", "display" => "Item Name");
@@ -37,6 +45,13 @@ class ItemController extends AppController {
         $settings["filters"][] = array("name" => "a.part_no", "display" => "Part Number");
         $settings["filters"][] = array("name" => "a.sn_no", "display" => "Serial Number");
         $settings["filters"][] = array("name" => "a.gclass", "display" => "Quality");
+        $settings["filters"][] = array("name" => "a.other_item_code", "display" => "Other Item Code");
+        $settings["filters"][] = array("name" => "a.other_item_name", "display" => "Other Item Name");
+        $settings["filters"][] = array("name" => "a.add_notes", "display" => "Description");
+        $settings["filters"][] = array("name" => "a.notes", "display" => "Notes");
+        $settings["filters"][] = array("name" => "d.loc_name", "display" => "Location");
+        $settings["filters"][] = array("name" => "d.bin_code", "display" => "Bin Code");
+
 
 		if (!$router->IsAjaxRequest) {
 			// UI Settings
@@ -68,7 +83,7 @@ class ItemController extends AppController {
 			$settings["def_order"] = 5;
 			$settings["singleSelect"] = true;
 		} else {
-			$settings["from"] = "vw_ic_item_master AS a JOIN cm_company AS b ON a.entity_id = b.entity_id Join ic_item_category AS c On a.category_id = c.id";
+			$settings["from"] = "vw_ic_item_master AS a JOIN cm_company AS b ON a.entity_id = b.entity_id Join ic_item_category AS c On a.category_id = c.id LEFT JOIN vw_ic_item_location AS d ON a.id = d.item_id And d.project_id = ".$this->userProjectId;
 			$settings["where"] = "a.is_deleted = 0 AND a.entity_id = " . $this->userCompanyId;
 		}
 
@@ -79,12 +94,13 @@ class ItemController extends AppController {
 	public function add() {
 		require_once(MODEL . "master/company.php");
 		require_once(MODEL . "common/uom_master.php");
+        require_once(MODEL . "common/stock_location.php");
 		require_once(MODEL . "inventory/item_category.php");
 		require_once(MODEL . "master/unitbrand.php");
         require_once(MODEL . "master/unittype.php");
         require_once(MODEL . "master/unitcomp.php");
 		$item = new Item();
-
+        $item->ProjectId = $this->userProjectId;
 		if (count($this->postData) > 0) {
 			// OK user ada kirim data kita proses
 			$item->UpdatedUserId = AclManager::GetInstance()->GetCurrentUser()->Id;
@@ -109,6 +125,10 @@ class ItemController extends AppController {
             $item->UomConversion = $this->GetPostValue("UomConversion");
             $item->IsDiscontinued = $this->GetPostValue("Obsolete", false);
             $item->IsDiscontinued = $item->IsDiscontinued == "1";
+            $item->OtherItemCode = $this->GetPostValue("OtherItemCode");
+            $item->OtherItemName = $this->GetPostValue("OtherItemName");
+            $item->AddNotes = $this->GetPostValue("AddNotes");
+            $item->StockLocationId = $this->GetPostValue("StockLocationId");
 			if (empty($item->AssetCategoryId)) {
 				$item->AssetCategoryId = null;
 			}
@@ -151,6 +171,10 @@ class ItemController extends AppController {
 		$this->Set("categories", $categories);
 		$this->Set("ubrand", $ubrand);
         $this->Set("utype", $utype);
+        // load stock location
+        $stocklocation = new StockLocation();
+        $stocklocation = $stocklocation->LoadByProjectId($this->userProjectId);
+        $this->Set("stocklocation", $stocklocation);
 	}
 
 	private function doInsert(Item $item) {
@@ -188,11 +212,14 @@ class ItemController extends AppController {
 	public function edit($id = null) {
 		require_once(MODEL . "master/company.php");
 		require_once(MODEL . "common/uom_master.php");
+        require_once(MODEL . "common/stock_location.php");
 		require_once(MODEL . "inventory/item_category.php");
         require_once(MODEL . "master/unitbrand.php");
         require_once(MODEL . "master/unittype.php");
         require_once(MODEL . "master/unitcomp.php");
+        require_once(MODEL . "inventory/item_location.php");
 		$item = new Item();
+        $item->ProjectId = $this->userProjectId;
 		if (count($this->postData) > 0) {
 			// OK user ada kirim data kita proses
 			$item->Id = $id;
@@ -217,6 +244,10 @@ class ItemController extends AppController {
             $item->LUomCode = $this->GetPostValue("LUom");
             $item->UomConversion = $this->GetPostValue("UomConversion");
             $item->IsDiscontinued = $this->GetPostValue("Obsolete", false);
+            $item->OtherItemCode = $this->GetPostValue("OtherItemCode");
+            $item->OtherItemName = $this->GetPostValue("OtherItemName");
+            $item->AddNotes = $this->GetPostValue("AddNotes");
+            $item->StockLocationId = $this->GetPostValue("StockLocationId");
             $item->IsDiscontinued = $item->IsDiscontinued == "1";
 			if (empty($item->AssetCategoryId)) {
 				$item->AssetCategoryId = null;
@@ -243,6 +274,11 @@ class ItemController extends AppController {
 				$this->persistence->SaveState("error", "Data Item yang dipilih tidak ditemukan ! Mungkin data sudah dihapus.");
 				redirect_url("inventory.item");
 			}
+			$itemloc = new ItemLocation();
+			$itemloc = $itemloc->LoadByItemProjectId($id,$this->userProjectId);
+			if ($itemloc != null) {
+                $item->StockLocationId = $itemloc->LocationId;
+            }
 		}
 
         // load data company for combo box
@@ -270,6 +306,10 @@ class ItemController extends AppController {
         $this->Set("categories", $categories);
         $this->Set("ubrand", $ubrand);
         $this->Set("utype", $utype);
+        // load stock location
+        $stocklocation = new StockLocation();
+        $stocklocation = $stocklocation->LoadByProjectId($this->userProjectId);
+        $this->Set("stocklocation", $stocklocation);
 	}
 
 	private function doUpdate(Item $item) {

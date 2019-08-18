@@ -86,6 +86,7 @@ $menu = $root->AddNode("INVENTORY", null, "menu");
 	$menu->AddNode("Master Files", null, "title");
 	//$menu->AddNode("Gudang", "inventory.warehouse");
 	    $menu->AddNode("Items Category", "inventory.itemcategory");
+	    $menu->AddNode("Item Stock Location", "common.stocklocation");
 	    $menu->AddNode("Items & Parts List", "inventory.item");
         $menu->AddNode("Unit of Measure", "common.uom");
         $menu->AddNode("Inventory Opening", "inventory.icobal");

@@ -1,11 +1,11 @@
 <!DOCTYPE HTML>
 <html xmlns="http://www.w3.org/1999/html">
 <?php
-/** @var $rr Rr */
+/** @var $pr Pr */
 $counter = 0;
 ?>
 <head>
-    <title>REKASYS | R/R Approval</title>
+    <title>REKASYS | P/R Approval</title>
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8"/>
     <script type="text/javascript" src="<?php print($helper->path("public/js/jquery.min.js")); ?>"></script>
     <script type="text/javascript" src="<?php print($helper->path("public/js/jquery-ui.custom.min.js")); ?>"></script>
@@ -74,7 +74,7 @@ $baddnew = base_url('public/images/button/').'create_new.png';
 $bpdf = base_url('public/images/button/').'pdf.png';
 ?>
 <br />
-<div id="p" class="easyui-panel" title="R/R - Approval" style="width:100%;height:100%;padding:10px;" data-options="footer:'#ft'">
+<div id="p" class="easyui-panel" title="P/R - Approval" style="width:100%;height:100%;padding:10px;" data-options="footer:'#ft'">
     <table cellpadding="0" cellspacing="0" class="tablePadding" align="left" style="font-size: 13px;font-family: tahoma">
         <tr>
             <td class="right">Project :</td>
@@ -83,15 +83,15 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                     <?php
                     /** @var $projects Project[] */
                     foreach ($projects as $project) {
-                        if ($project->Id == $rr->ProjectId) {
+                        if ($project->Id == $pr->ProjectId) {
                             printf('<option value="%d" selected="selected">%s - %s</option>', $project->Id, $project->ProjectCd, $project->ProjectName);
                         } else {
                             printf('<option value="%d">%s - %s</option>', $project->Id, $project->ProjectCd, $project->ProjectName);
                         }
                     }
                     ?>
-                    <input type="hidden" name="Id" id="Id" value="<?php print($rr->Id);?>"/>
-                    <input type="hidden" name="PrNo" id="PrNo" value="<?php print($rr->DocumentNo);?>"/>
+                    <input type="hidden" name="Id" id="Id" value="<?php print($pr->Id);?>"/>
+                    <input type="hidden" name="PrNo" id="PrNo" value="<?php print($pr->DocumentNo);?>"/>
                 </select>
             </td>
             <td class="right">Dept :</td>
@@ -100,7 +100,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                     <?php
                     /** @var $departments Department[] */
                     foreach ($departments as $dept) {
-                        if ($dept->Id == $rr->DeptId) {
+                        if ($dept->Id == $pr->DeptId) {
                             printf('<option value="%d" selected="selected">%s - %s</option>', $dept->Id, $dept->DeptCode, $dept->DeptName);
                         } else {
                             printf('<option value="%d">%s - %s</option>', $dept->Id, $dept->DeptCode, $dept->DeptName);
@@ -109,26 +109,26 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                     ?>
                 </select>
             </td>
-            <td class="right">R/R No :</td>
-            <td><input type="text" class="f1 easyui-textbox" style="width: 130px" id="DocumentNo" name="DocumentNo" value="<?php print($rr->DocumentNo != null ? $rr->DocumentNo : '[AUTO]'); ?>" readonly/></td>
+            <td class="right">P/R No :</td>
+            <td><input type="text" class="f1 easyui-textbox" style="width: 130px" id="DocumentNo" name="DocumentNo" value="<?php print($pr->DocumentNo != null ? $pr->DocumentNo : '[AUTO]'); ?>" readonly/></td>
         </tr>
         <tr>
             <td class="right">Notes :</td>
-            <td><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 250px; height: 40px;" value="<?php print($rr->Note);?>"></td>
-            <td class="right">R/R Date :</td>
-            <td><input type="text" class="easyui-datebox" style="width: 130px" id="PrDate" name="PrDate" data-options="formatter:myformatter,parser:myparser" disabled="disabled" value="<?php print($rr->FormatDate(SQL_DATEONLY));?>"/></td>
+            <td><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 250px; height: 40px;" value="<?php print($pr->Note);?>"></td>
+            <td class="right">P/R Date :</td>
+            <td><input type="text" class="easyui-datebox" style="width: 130px" id="PrDate" name="PrDate" data-options="formatter:myformatter,parser:myparser" disabled="disabled" value="<?php print($pr->FormatDate(SQL_DATEONLY));?>"/></td>
             <td class="right">Status :</td>
-            <td><input type="text" class="easyui-textbox" style="width: 130px" id="StatusCode" name="StatusCode" value="<?php print($rr->GetStatus());?>" disabled/></td>
+            <td><input type="text" class="easyui-textbox" style="width: 130px" id="StatusCode" name="StatusCode" value="<?php print($pr->GetStatus());?>" disabled/></td>
         </tr>
         <tr>
             <td>&nbsp;</td>
         </tr>
         <tr>
             <td colspan="9">
-            <form action="<?php print($helper->site_url("inventory.rr/approve/".$level."/". $rr->Id)); ?>" method="post">
+            <form action="<?php print($helper->site_url("inventory.pr/verify/".$level."/". $pr->Id)); ?>" method="post">
                 <table cellpadding="0" cellspacing="0" class="tablePadding tableBorder" align="left" style="font-size: 12px;font-family: tahoma">
                     <tr>
-                        <th colspan="8">R/R Detail</th>
+                        <th colspan="8">P/R Detail</th>
                     </tr>
                     <tr>
                         <th>No.</th>
@@ -142,7 +142,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                     </tr>
                     <?php
                     $dtx = null;
-                    foreach($rr->Details as $idx => $detail) {
+                    foreach($pr->Details as $idx => $detail) {
                         $counter++;
                         print ("<tr>");
                         printf("<td align='center'>%s</td>",$counter);
@@ -159,9 +159,9 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                     <tr>
                         <td colspan="9" valign="middle" align="right">
                             <input type="hidden" name="AppLevel" value="<?php print($level);?>"/>
-                            <button type="submit">APPROVAL DEPT HEAD</button>
+                            <button type="submit">APPROVAL PM</button>
                             &nbsp;&nbsp;&nbsp;
-                            <a href="<?php print($helper->site_url("inventory.rr")); ?>">R/R List</a>
+                            <a href="<?php print($helper->site_url("inventory.pr")); ?>">P/R List</a>
                         </td>
                     </tr>
                 </table>
@@ -176,9 +176,9 @@ $bpdf = base_url('public/images/button/').'pdf.png';
 
 <script type="text/javascript">
     $( function() {
-        var PrId = "<?php print($rr->Id);?>";
-        var PrStatus = "<?php print($rr->StatusCode);?>";
-        var ProjectId = "<?php print($rr->ProjectId);?>";
+        var PrId = "<?php print($pr->Id);?>";
+        var PrStatus = "<?php print($pr->StatusCode);?>";
+        var ProjectId = "<?php print($pr->ProjectId);?>";
 
     })
 

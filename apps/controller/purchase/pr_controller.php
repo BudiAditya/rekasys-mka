@@ -23,7 +23,8 @@ class PrController extends AppController {
         $settings["columns"][] = array("name" => "a.dept_name", "display" => "Dept", "width" => 150);
 		$settings["columns"][] = array("name" => "a.doc_no", "display" => "PR Number", "width" => 120);
 		$settings["columns"][] = array("name" => "DATE_FORMAT(a.pr_date, '%d %M %Y')", "display" => "PR Date", "width" => 100, "sortable" => false);
-		$settings["columns"][] = array("name" => "b.short_desc", "display" => "Status", "width" => 100);
+		$settings["columns"][] = array("name" => "c.short_desc", "display" => "Req Level", "width" => 100);
+        $settings["columns"][] = array("name" => "b.short_desc", "display" => "Status", "width" => 100);
 		$settings["columns"][] = array("name" => "DATE_FORMAT(a.update_time, '%d %M %Y')", "display" => "Last Update", "width" => 100, "sortable" => false);
 
 		$settings["filters"][] = array("name" => "a.doc_no", "display" => "PR Number");
@@ -57,7 +58,7 @@ class PrController extends AppController {
 
 		} else {
 			// Client sudah meminta data / querying data jadi kita kasi settings untuk pencarian data
-			$settings["from"] = "vw_ic_pr_master AS a JOIN sys_status_code AS b ON a.status = b.code AND b.key = 'pr_status'";
+			$settings["from"] = "vw_ic_pr_master AS a JOIN sys_status_code AS b ON a.status = b.code AND b.key = 'pr_status' LEFT JOIN sys_status_code AS c ON a.req_level = c.code AND c.key = 'mr_req_level'";
 			//if ($this->userLevel < 5){
             //    $settings["where"] = "a.is_deleted = 0 And a.status >= 3 And Locate(a.project_id,".$this->userProjectIds.")";
             //}else {
