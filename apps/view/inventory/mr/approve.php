@@ -81,10 +81,6 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             <td><input class="easyui-textbox" id="ProjectId" name="ProjectId" style="width: 250px" value="<?php printf("%s - %s", $project->ProjectCd, $project->ProjectName); ?>" readonly></td>
             <td class="right">Activity :</td>
             <td><input class="easyui-textbox" id="ActivityId" name="ActivityId" style="width: 250px" value="<?php printf("%s - %s", $activity->ActCode, $activity->ActName); ?>" readonly></td>
-        </tr>
-        <tr>
-            <td class="right">Departement :</td>
-            <td><input class="easyui-textbox" id="DepartmentId" name="DepartmentId" style="width: 250px" value="<?php printf("%s - %s", $department->DeptCode, $department->DeptName); ?>" readonly></td>
             <td class="right">MR No :</td>
             <td>
                 <input type="text" class="f1 easyui-textbox" style="width: 130px" id="DocumentNo" name="DocumentNo" value="<?php print($mr->DocumentNo != null ? $mr->DocumentNo : '[AUTO]'); ?>" readonly/>
@@ -92,10 +88,24 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             </td>
         </tr>
         <tr>
-            <td class="right">Notes :</td>
-            <td><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 250px; height: 50px;" value="<?php print($mr->Note);?>" readonly></td>
+            <td class="right">Departement :</td>
+            <td><input class="easyui-textbox" id="DepartmentId" name="DepartmentId" style="width: 250px" value="<?php printf("%s - %s", $department->DeptCode, $department->DeptName); ?>" readonly></td>
             <td class="right">MR Date :</td>
             <td><input type="text" class="easyui-datebox" style="width: 130px" id="MrDate" name="MrDate" data-options="formatter:myformatter,parser:myparser"  readonly value="<?php print($mr->FormatDate(SQL_DATEONLY));?>"/></td>
+            <td class="right">Request By :</td>
+            <td colspan="2"><input type="text" class="easyui-textbox" style="width: 200px" id="RequestBy" name="RequestBy" value="<?php print($mr->RequestBy);?>" readonly/></td>
+        </tr>
+        <tr>
+            <td class="right">Notes :</td>
+            <td colspan="3"><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 460px; height: 35px;" value="<?php print($mr->Note);?>" readonly></td>
+            <td class="right">Request Level :</td>
+            <td colspan="2">
+                <select class="easyui-combobox" id="ReqLevel" name="ReqLevel" style="width: 200px" disabled>
+                    <option value="1" <?php print($mr->ReqLevel == 1 ? 'selected="selected"' : '');?>> 1 - Normal </option>
+                    <option value="2" <?php print($mr->ReqLevel == 2 ? 'selected="selected"' : '');?>> 2 - Medium </option>
+                    <option value="3" <?php print($mr->ReqLevel == 3 ? 'selected="selected"' : '');?>> 3 - Urgent </option>
+                </select>
+            </td>
         </tr>
         <tr>
             <td>&nbsp;</td>

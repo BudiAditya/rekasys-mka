@@ -113,12 +113,22 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             <td><input type="text" class="f1 easyui-textbox" style="width: 130px" id="DocumentNo" name="DocumentNo" value="<?php print($rr->DocumentNo != null ? $rr->DocumentNo : '[AUTO]'); ?>" readonly/></td>
         </tr>
         <tr>
-            <td class="right">Notes :</td>
-            <td><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 250px; height: 40px;" value="<?php print($rr->Note);?>"></td>
+            <td rowspan="2" class="right">Notes :</td>
+            <td rowspan="2"><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 250px; height: 40px;" value="<?php print($rr->Note);?>" disabled></td>
             <td class="right">R/R Date :</td>
-            <td><input type="text" class="easyui-datebox" style="width: 130px" id="PrDate" name="PrDate" data-options="formatter:myformatter,parser:myparser" disabled="disabled" value="<?php print($rr->FormatDate(SQL_DATEONLY));?>"/></td>
+            <td><input type="text" class="easyui-datebox" style="width: 130px" id="RrDate" name="RrDate" data-options="formatter:myformatter,parser:myparser" readonly value="<?php print($rr->FormatDate(SQL_DATEONLY));?>"/></td>
             <td class="right">Status :</td>
             <td><input type="text" class="easyui-textbox" style="width: 130px" id="StatusCode" name="StatusCode" value="<?php print($rr->GetStatus());?>" disabled/></td>
+        </tr>
+        <tr>
+            <td class="right">Request Level :</td>
+            <td>
+                <select class="easyui-combobox" id="ReqLevel" name="ReqLevel" style="width: 130px" disabled>
+                    <option value="1" <?php print($rr->ReqLevel == 1 ? 'selected="selected"' : '');?>> 1 - Normal </option>
+                    <option value="2" <?php print($rr->ReqLevel == 2 ? 'selected="selected"' : '');?>> 2 - Medium </option>
+                    <option value="3" <?php print($rr->ReqLevel == 3 ? 'selected="selected"' : '');?>> 3 - Urgent </option>
+                </select>
+            </td>
         </tr>
         <tr>
             <td>&nbsp;</td>
@@ -161,7 +171,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                     ?>
                     <tr>
                         <td colspan="10" valign="middle" align="right">
-                            <a href="<?php print($helper->site_url("purchase.pr")); ?>">R/R List</a>
+                            <a href="<?php print($helper->site_url("purchase.rr")); ?>">R/R List</a>
                         </td>
                     </tr>
                 </table>

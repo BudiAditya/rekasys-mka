@@ -113,12 +113,22 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             <td><input type="text" class="f1 easyui-textbox" style="width: 130px" id="DocumentNo" name="DocumentNo" value="<?php print($pr->DocumentNo != null ? $pr->DocumentNo : '[AUTO]'); ?>" readonly/></td>
         </tr>
         <tr>
-            <td class="right">Notes :</td>
-            <td><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 250px; height: 40px;" value="<?php print($pr->Note);?>"></td>
+            <td rowspan="2" class="right">Notes :</td>
+            <td rowspan="2"><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 250px; height: 40px;" value="<?php print($pr->Note);?>" disabled></td>
             <td class="right">P/R Date :</td>
-            <td><input type="text" class="easyui-datebox" style="width: 130px" id="PrDate" name="PrDate" data-options="formatter:myformatter,parser:myparser" disabled="disabled" value="<?php print($pr->FormatDate(SQL_DATEONLY));?>"/></td>
+            <td><input type="text" class="easyui-datebox" style="width: 130px" id="PrDate" name="PrDate" data-options="formatter:myformatter,parser:myparser" disabled value="<?php print($pr->FormatDate(SQL_DATEONLY));?>"/></td>
             <td class="right">Status :</td>
             <td><input type="text" class="easyui-textbox" style="width: 130px" id="StatusCode" name="StatusCode" value="<?php print($pr->GetStatus());?>" disabled/></td>
+        </tr>
+        <tr>
+            <td class="right">Request Level :</td>
+            <td>
+                <select class="easyui-combobox" id="ReqLevel" name="ReqLevel" style="width: 130px" disabled>
+                    <option value="1" <?php print($pr->ReqLevel == 1 ? 'selected="selected"' : '');?>> 1 - Normal </option>
+                    <option value="2" <?php print($pr->ReqLevel == 2 ? 'selected="selected"' : '');?>> 2 - Medium </option>
+                    <option value="3" <?php print($pr->ReqLevel == 3 ? 'selected="selected"' : '');?>> 3 - Urgent </option>
+                </select>
+            </td>
         </tr>
         <tr>
             <td>&nbsp;</td>

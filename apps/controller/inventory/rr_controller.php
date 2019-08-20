@@ -352,7 +352,8 @@ class RrController extends AppController {
             $rr->Date = strtotime($this->GetPostValue("RrDate"));
             $rr->DeptId = $this->GetPostValue("DeptId");
             $rr->Note = $this->GetPostValue("Note");
-            $rr->DocumentNo = $this->GetPostValue("PrNo");
+            $rr->ReqLevel = $this->GetPostValue("ReqLevel");
+            $rr->DocumentNo = $this->GetPostValue("RrNo");
             $rr->CreatedById = $this->userUid;
             if ($rr->Id == 0) {
                 require_once(MODEL . "common/doc_counter.php");

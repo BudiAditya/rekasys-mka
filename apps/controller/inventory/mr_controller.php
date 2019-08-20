@@ -24,12 +24,12 @@ class MrController extends AppController {
 		//$settings["columns"][] = array("name" => "c.entity_cd", "display" => "Company", "width" => 60);
 		$settings["columns"][] = array("name" => "a1.project_name", "display" => "Project", "width" => 100);
 		$settings["columns"][] = array("name" => "a.doc_no", "display" => "MR Number", "width" => 120);
-		$settings["columns"][] = array("name" => "DATE_FORMAT(a.mr_date, '%d %M %Y')", "display" => "MR Date", "width" => 100, "sortable" => false);
+		$settings["columns"][] = array("name" => "DATE_FORMAT(a.mr_date, '%d-%m-%Y')", "display" => "MR Date", "width" => 80, "sortable" => false);
+        $settings["columns"][] = array("name" => "b.dept_name", "display" => "Dept", "width" => 150);
         $settings["columns"][] = array("name" => "a.request_by", "display" => "Request By", "width" => 80);
-		$settings["columns"][] = array("name" => "b.dept_name", "display" => "Dept", "width" => 150);
         $settings["columns"][] = array("name" => "e.short_desc", "display" => "Level", "width" => 100);
-        $settings["columns"][] = array("name" => "d.short_desc", "display" => "Status", "width" => 100);
-		$settings["columns"][] = array("name" => "DATE_FORMAT(a.update_time, '%d %M %Y')", "display" => "Last Update", "width" => 100, "sortable" => false);
+        $settings["columns"][] = array("name" => "d.short_desc", "display" => "Progress Status", "width" => 100);
+		$settings["columns"][] = array("name" => "DATE_FORMAT(a.update_time, '%d-%m-%Y')", "display" => "Last Update", "width" => 80, "sortable" => false);
 
 		$settings["filters"][] = array("name" => "a.doc_no", "display" => "Doc Number");
 		$settings["filters"][] = array("name" => "b.dept_codo", "display" => "Dept");
@@ -171,6 +171,8 @@ class MrController extends AppController {
             $mr->Note = $this->GetPostValue("Note");
             $mr->RequestBy = $this->GetPostValue("RequestBy");
             $mr->DocumentNo = $this->GetPostValue("MrNo");
+            $mr->RequestBy = $this->GetPostValue("RequestBy");
+            $mr->ReqLevel = $this->GetPostValue("ReqLevel");
             $mr->CreatedById = $this->userUid;
             if ($mrId == 0){
                 $mr->StatusCode = 1;

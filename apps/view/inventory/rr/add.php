@@ -93,7 +93,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                     }
                     ?>
                     <input type="hidden" name="Id" id="Id" value="<?php print($rr->Id);?>"/>
-                    <input type="hidden" name="PrNo" id="PrNo" value="<?php print($rr->DocumentNo);?>"/>
+                    <input type="hidden" name="RrNo" id="RrNo" value="<?php print($rr->DocumentNo);?>"/>
                 </select>
             </td>
             <td class="right">Dept :</td>
@@ -115,12 +115,31 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             <td><input type="text" class="f1 easyui-textbox" style="width: 130px" id="DocumentNo" name="DocumentNo" value="<?php print($rr->DocumentNo != null ? $rr->DocumentNo : '[AUTO]'); ?>" readonly/></td>
         </tr>
         <tr>
-            <td class="right">Notes :</td>
-            <td><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 250px; height: 40px;" value="<?php print($rr->Note);?>"></td>
+            <td rowspan="2" class="right">Notes :</td>
+            <td rowspan="2"><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 250px; height: 40px;" value="<?php print($rr->Note);?>"></td>
             <td class="right">R/R Date :</td>
-            <td><input type="text" class="easyui-datebox" style="width: 130px" id="PrDate" name="PrDate" data-options="formatter:myformatter,parser:myparser" required="required" value="<?php print($rr->FormatDate(SQL_DATEONLY));?>"/></td>
+            <td><input type="text" class="easyui-datebox" style="width: 130px" id="RrDate" name="RrDate" data-options="formatter:myformatter,parser:myparser" required="required" value="<?php print($rr->FormatDate(SQL_DATEONLY));?>"/></td>
             <td class="right">Status :</td>
             <td><input type="text" class="easyui-textbox" style="width: 130px" id="StatusCode" name="StatusCode" value="<?php print($rr->GetStatus());?>" disabled/></td>
+        </tr>
+        <tr>
+            <td class="right">Request Level :</td>
+            <td>
+                <select class="easyui-combobox" id="ReqLevel" name="ReqLevel" style="width: 130px" required>
+                    <option value="1" <?php print($rr->ReqLevel == 1 ? 'selected="selected"' : '');?>> 1 - Normal </option>
+                    <option value="2" <?php print($rr->ReqLevel == 2 ? 'selected="selected"' : '');?>> 2 - Medium </option>
+                    <option value="3" <?php print($rr->ReqLevel == 3 ? 'selected="selected"' : '');?>> 3 - Urgent </option>
+                </select>
+            </td>
+            <td class="center">
+                <?php
+                if ($acl->CheckUserAccess("inventory.pr", "edit") && $rr->StatusCode == 1 && $rr->DocumentNo != null) {
+                    printf('<img src="%s" alt="Update PR" title="Update PR" id="bUpdate" style="cursor: pointer;"/>&nbsp;&nbsp;',$bsubmit);
+                }else{
+                    print("&nbsp;");
+                }
+                ?>
+            </td>
         </tr>
         <tr>
             <td>&nbsp;</td>
@@ -341,6 +360,29 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             }
         });
 
+        $("#bUpdate").click(function(e){
+            if (checkMaster()){
+                if (confirm('Update PR Master?')) {
+                    var mPrn = $("#RrNo").val();
+                    var mPri = $("#ProjectId").combobox('getValue');
+                    var mDpi = $("#DeptId").combobox('getValue');
+                    var mNot = $("#Note").textbox('getValue');
+                    var mDte = $("#RrDate").datebox('getValue');
+                    var mRql = $("#ReqLevel").combobox('getValue');
+                    var urm = "<?php print($helper->site_url("inventory.rr/proses_master/")); ?>" + RrId;
+                    //proses simpan dan update master
+                    $.post(urm, {ProjectId: mPri, DeptId: mDpi, Note: mNot, RrDate: mDte, RrNo: mPrn, ReqLevel: mRql}, function (data) {
+                        var rst = data.split('|');
+                        if (rst[0] == 'OK') {
+                            location.reload();
+                        }else{
+                            alert(data + ' - Update Master RR Gagal!');
+                        }
+                    });
+                }
+            }
+        });
+
         $("#bAdDetail").click(function(e){
             newItem(0);
         });
@@ -404,7 +446,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
     function checkMaster() {
         var mPri = $("#ProjectId").combobox('getValue');
         var mDpi = $("#DeptId").combobox('getValue');
-        var mDte = $("#PrDate").datebox('getValue');
+        var mDte = $("#RrDate").datebox('getValue');
         if (mPri > 0 && mDpi > 0 && mDte != ''){
             return true;
         }else{
@@ -415,11 +457,12 @@ $bpdf = base_url('public/images/button/').'pdf.png';
     function saveDetail(){
         RrId = $("#Id").val();
         var tMod = $("#aMode").val();
-        var mPrn = $("#PrNo").val();
+        var mPrn = $("#RrNo").val();
         var mPri = $("#ProjectId").combobox('getValue');
         var mDpi = $("#DeptId").combobox('getValue');
         var mNot = $("#Note").textbox('getValue');
-        var mDte = $("#PrDate").datebox('getValue');
+        var mDte = $("#RrDate").datebox('getValue');
+        var mRql = $("#ReqLevel").combobox('getValue');
         var dIti = $("#aItemId").val();
         var dQty = $("#aPrQty").textbox('getValue');
         var dUom = $("#aUomCd").textbox('getValue');
@@ -427,7 +470,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
         if (dIti > 0 && dQty > 0){
             var urm = "<?php print($helper->site_url("inventory.rr/proses_master/")); ?>" + RrId;
             //proses simpan dan update master
-            $.post(urm,{ProjectId: mPri, DeptId: mDpi,Note: mNot, PrDate: mDte, PrNo: mPrn}, function( data ) {
+            $.post(urm,{ProjectId: mPri, DeptId: mDpi,Note: mNot, RrDate: mDte, RrNo: mPrn, ReqLevel: mRql}, function( data ) {
                 var rst = data.split('|');
                 if (rst[0] == 'OK') {
                     RrId = rst[2];

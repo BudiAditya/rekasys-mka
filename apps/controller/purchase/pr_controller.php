@@ -23,8 +23,11 @@ class PrController extends AppController {
         $settings["columns"][] = array("name" => "a.dept_name", "display" => "Dept", "width" => 150);
 		$settings["columns"][] = array("name" => "a.doc_no", "display" => "PR Number", "width" => 120);
 		$settings["columns"][] = array("name" => "DATE_FORMAT(a.pr_date, '%d %M %Y')", "display" => "PR Date", "width" => 100, "sortable" => false);
-		$settings["columns"][] = array("name" => "c.short_desc", "display" => "Req Level", "width" => 100);
-        $settings["columns"][] = array("name" => "b.short_desc", "display" => "Status", "width" => 100);
+		$settings["columns"][] = array("name" => "c.short_desc", "display" => "Req Level", "width" => 70);
+        $settings["columns"][] = array("name" => "If (a.qty_status > 0 ,'COMPLETE','INCOMPLETE')", "display" => "Qty Status", "width" => 70);
+        $settings["columns"][] = array("name" => "If (a.prc_status > 0 ,'COMPLETE','INCOMPLETE')", "display" => "Price Status", "width" => 70);
+        $settings["columns"][] = array("name" => "If (a.sup_status > 0 ,'COMPLETE','INCOMPLETE')", "display" => "Vendor Status", "width" => 70);
+        $settings["columns"][] = array("name" => "b.short_desc", "display" => "Progress Status", "width" => 100);
 		$settings["columns"][] = array("name" => "DATE_FORMAT(a.update_time, '%d %M %Y')", "display" => "Last Update", "width" => 100, "sortable" => false);
 
 		$settings["filters"][] = array("name" => "a.doc_no", "display" => "PR Number");
@@ -47,7 +50,7 @@ class PrController extends AppController {
 
             if ($acl->CheckUserAccess("pr", "process", "purchase")) {
                 $settings["actions"][] = array("Text" => "separator", "Url" => null);
-                $settings["actions"][] = array("Text" => "Input Harga", "Url" => "purchase.pr/process/%s", "Class" => "bt_edit", "ReqId" => 1,
+                $settings["actions"][] = array("Text" => "<b>Input Harga & Supplier</b>", "Url" => "purchase.pr/process/%s", "Class" => "bt_edit", "ReqId" => 1,
                     "Error" => "Mohon memilih Dokumen PR terlebih dahulu sebelum melakukan proses!\nHarap memilih tepat 1 dokumen dan jangan lebih dari 1.",
                     "Confirm" => "Apakah anda mau memproses Dokumen PR yang dipilih ?");
             }

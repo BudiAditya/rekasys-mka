@@ -147,6 +147,23 @@ $bpdf = base_url('public/images/button/').'pdf.png';
         <tr valign="top">
             <td class="right">Notes :</td>
             <td colspan="3"><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 460px; height:35px;" value="<?php print($mr->Note);?>"></td>
+            <td class="right">Request Level :</td>
+            <td colspan="2">
+                <select class="easyui-combobox" id="ReqLevel" name="ReqLevel" style="width: 200px" required>
+                    <option value="1" <?php print($mr->ReqLevel == 1 ? 'selected="selected"' : '');?>> 1 - Normal </option>
+                    <option value="2" <?php print($mr->ReqLevel == 2 ? 'selected="selected"' : '');?>> 2 - Medium </option>
+                    <option value="3" <?php print($mr->ReqLevel == 3 ? 'selected="selected"' : '');?>> 3 - Urgent </option>
+                </select>
+            </td>
+            <td class="center">
+                <?php
+                if ($acl->CheckUserAccess("inventory.mr", "edit") && $mr->StatusCode < 3 && $mr->DocumentNo != null) {
+                    printf('<img src="%s" alt="Update MR" title="Update MR" id="bUpdate" style="cursor: pointer;"/>&nbsp;&nbsp;',$bsubmit);
+                }else{
+                    print("&nbsp;");
+                }
+                ?>
+            </td>
         </tr>
         <tr>
             <td>&nbsp;</td>
@@ -326,6 +343,33 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             }
         });
 
+        $("#bUpdate").click(function(e){
+            //proses update master MR
+            if (checkMaster()) {
+                if (confirm("Update MR Master?")) {
+                    var mMrn = $("#MrNo").val();
+                    var mPri = $("#ProjectId").combobox('getValue');
+                    var mDpi = $("#DepartmentId").combobox('getValue');
+                    var mAci = $("#ActivityId").combobox('getValue');
+                    var mNot = $("#Note").textbox('getValue');
+                    var mDte = $("#MrDate").datebox('getValue');
+                    var mRqb = $("#RequestBy").textbox('getValue');
+                    var mRql = $("#ReqLevel").combobox('getValue');
+                    var urm = "<?php print($helper->site_url("inventory.mr/proses_master/")); ?>" + MrId;
+                    //proses simpan dan update master
+                    $.post(urm,{ProjectId: mPri, DepartmentId: mDpi, ActivityId: mAci, Note: mNot, MrDate: mDte, MrNo: mMrn, RequestBy: mRqb, ReqLevel: mRql}, function( data ) {
+                        var rst = data.split('|');
+                        if (rst[0] == 'OK') {
+                            location.reload();
+                            //alert(data+' - Update MR Master berhasil!');
+                        }else{
+                            alert(data+' - Update MR Master gagal!');
+                        }
+                    });
+                }
+            }
+        });
+
         $("#bAdDetail").click(function(e){
             newItem(0);
         });
@@ -433,15 +477,18 @@ $bpdf = base_url('public/images/button/').'pdf.png';
         var mAci = $("#ActivityId").combobox('getValue');
         var mNot = $("#Note").textbox('getValue');
         var mDte = $("#MrDate").datebox('getValue');
+        var mRqb = $("#RequestBy").textbox('getValue');
+        var mRql = $("#ReqLevel").combobox('getValue');
         var dIti = $("#aItemId").val();
         var dQty = $("#aRequestedQty").textbox('getValue');
         var dUni = $("#aUnitId").combobox('getValue');
         var dSts = $("#aStsItem").combobox('getValue');
         var dUom = $("#aUomCd").textbox('getValue');
+        alert (mRqb+ ' - '+mRql);
         if (dIti > 0 && dQty > 0){
             var urm = "<?php print($helper->site_url("inventory.mr/proses_master/")); ?>" + MrId;
             //proses simpan dan update master
-            $.post(urm,{ProjectId: mPri, DepartmentId: mDpi, ActivityId: mAci, Note: mNot, MrDate: mDte, MrNo: mMrn}, function( data ) {
+            $.post(urm,{ProjectId: mPri, DepartmentId: mDpi, ActivityId: mAci, Note: mNot, MrDate: mDte, MrNo: mMrn, RequestBy: mRqb, ReqLevel: mRql}, function( data ) {
                 var rst = data.split('|');
                 if (rst[0] == 'OK') {
                     MrId = rst[2];
@@ -485,6 +532,8 @@ $bpdf = base_url('public/images/button/').'pdf.png';
         var mAci = $("#ActivityId").combobox('getValue');
         var mNot = $("#Note").textbox('getValue');
         var mDte = $("#MrDate").datebox('getValue');
+        var mRqb = $("#RequestBy").textbox('getValue');
+        var mRql = $("#ReqLevel").combobox('getValue');
         var dIti = $("#aItemId").val();
         var dQty = $("#aRequestedQty").textbox('getValue');
         var dUni = $("#aUnitId").combobox('getValue');
@@ -498,7 +547,9 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                 ActivityId: mAci,
                 Note: mNot,
                 MrDate: mDte,
-                MrNo: mMrn
+                MrNo: mMrn,
+                RequestBy: mRqb,
+                ReqLevel: mRql
             }).done(function (data) {
                 var rst = data.split('|');
                 if (rst[0] == 'OK') {

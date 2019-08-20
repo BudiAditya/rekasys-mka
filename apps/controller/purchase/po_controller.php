@@ -314,12 +314,16 @@ WHERE id IN (
 		$settings = array();
 
 		$settings["columns"][] = array("name" => "a.id", "display" => "ID", "width" => 50);
-		//$settings["columns"][] = array("name" => "c.entity_cd", "display" => "Company", "width" => 80);
-        $settings["columns"][] = array("name" => "b.project_name", "display" => "Project", "width" => 100);
-		$settings["columns"][] = array("name" => "a.doc_no", "display" => "No Dokumen PR", "width" => 120);
-		$settings["columns"][] = array("name" => "DATE_FORMAT(a.pr_date, '%d %M %Y')", "display" => "Tgl. PR", "width" => 100, "sortable" => false);
-		$settings["columns"][] = array("name" => "d.short_desc", "display" => "Status", "width" => 100);
-		$settings["columns"][] = array("name" => "DATE_FORMAT(a.update_time, '%d %M %Y')", "display" => "Tgl. Update", "width" => 100, "sortable" => false);
+        $settings["columns"][] = array("name" => "a.project_name", "display" => "Project", "width" => 100);
+        $settings["columns"][] = array("name" => "a.dept_name", "display" => "Dept", "width" => 150);
+        $settings["columns"][] = array("name" => "a.doc_no", "display" => "PR Number", "width" => 120);
+        $settings["columns"][] = array("name" => "DATE_FORMAT(a.pr_date, '%d %M %Y')", "display" => "PR Date", "width" => 100, "sortable" => false);
+        $settings["columns"][] = array("name" => "c.short_desc", "display" => "Req Level", "width" => 70);
+        $settings["columns"][] = array("name" => "If (a.qty_status > 0 ,'COMPLETE','INCOMPLETE')", "display" => "Qty Status", "width" => 70);
+        $settings["columns"][] = array("name" => "If (a.prc_status > 0 ,'COMPLETE','INCOMPLETE')", "display" => "Price Status", "width" => 70);
+        $settings["columns"][] = array("name" => "If (a.sup_status > 0 ,'COMPLETE','INCOMPLETE')", "display" => "Vendor Status", "width" => 70);
+        $settings["columns"][] = array("name" => "b.short_desc", "display" => "Progress Status", "width" => 100);
+        $settings["columns"][] = array("name" => "DATE_FORMAT(a.update_time, '%d %M %Y')", "display" => "Last Update", "width" => 100, "sortable" => false);
 
 		$settings["filters"][] = array("name" => "a.doc_no", "display" => "No Dokumen PR");
 
@@ -347,12 +351,8 @@ WHERE id IN (
 			$settings["singleSelect"] = false;
 		} else {
 			// Client sudah meminta data / querying data jadi kita kasi settings untuk pencarian data
-			$settings["from"] =
-"ic_pr_master AS a
-    JOIN cm_project AS b ON a.project_id = b.id
-	JOIN cm_company AS c ON a.entity_id = c.entity_id
-	JOIN sys_status_code AS d ON a.status = d.code AND d.key = 'pr_status'";
-			$settings["where"] = "a.is_deleted = 0 AND a.status = 3 AND a.entity_id = " . $this->userCompanyId;
+            $settings["from"] = "vw_ic_pr_master AS a JOIN sys_status_code AS b ON a.status = b.code AND b.key = 'pr_status' LEFT JOIN sys_status_code AS c ON a.req_level = c.code AND c.key = 'mr_req_level'";
+			$settings["where"] = "a.qty_status > 0 AND a.prc_status > 0 AND a.sup_status > 0 AND a.is_deleted = 0 AND a.status = 3 AND a.entity_id = " . $this->userCompanyId;
 		}
 
 		$dispatcher = Dispatcher::CreateInstance();
@@ -1150,6 +1150,45 @@ WHERE a.po_master_id = ?newPoId";
                     $this->connector->AddParameter("?po", $poId);
                     $rs = $this->connector->ExecuteNonQuery();
                     //update mr qty
+                    $this->connector->CommandText = "Update ic_pr_detail AS a Set a.po_qty = a.po_qty + ?qty Where a.id = ?id";
+                    $this->connector->AddParameter("?qty", $podetail->Qty);
+                    $this->connector->AddParameter("?id", $podetail->PrDetailId);
+                    $rs = $this->connector->ExecuteNonQuery();
+                }
+            } else {
+                $rst = 'ER|Gagal proses simpan data!';
+            }
+        }else{
+            $rst = "ER|No Data posted!";
+        }
+        print($rst);
+    }
+
+    public function edit_detail($dId = null) {
+        $rst = null;
+        $podetail = new PoDetail();
+        $podetail = $podetail->LoadById($dId);
+        $xQty = 0;
+        if (count($this->postData) > 0) {
+            $podetail->PoId = $this->GetPostValue("aPoId");
+            $podetail->ItemId = $this->GetPostValue("aItemId");
+            $podetail->Qty = $this->GetPostValue("aPoQty");
+            $podetail->ItemDescription = '-';
+            $podetail->PrDetailId = $this->GetPostValue("aPrDetailId");
+            $podetail->UomCd = $this->GetPostValue("aUomCd");
+            $podetail->Price = $this->GetPostValue("aPrice");
+            $xQty = $this->GetPostValue("xPoQty");
+            // item baru simpan
+            $rs = $podetail->Update($dId);
+            if ($rs > 0) {
+                $rst = printf('OK|%s|Proses simpan data berhasil!',$podetail->Id);
+                //creat mr link
+                if ($podetail->PrDetailId > 0) {
+                    //update pr qty
+                    $this->connector->CommandText = "Update ic_pr_detail AS a Set a.po_qty = a.po_qty - ?qty Where a.id = ?id";
+                    $this->connector->AddParameter("?qty", $xQty);
+                    $this->connector->AddParameter("?id", $podetail->PrDetailId);
+                    $rs = $this->connector->ExecuteNonQuery();
                     $this->connector->CommandText = "Update ic_pr_detail AS a Set a.po_qty = a.po_qty + ?qty Where a.id = ?id";
                     $this->connector->AddParameter("?qty", $podetail->Qty);
                     $this->connector->AddParameter("?id", $podetail->PrDetailId);

@@ -91,7 +91,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                     }
                     ?>
                     <input type="hidden" name="Id" id="Id" value="<?php print($ro->Id);?>"/>
-                    <input type="hidden" name="PoNo" id="PoNo" value="<?php print($ro->DocumentNo);?>"/>
+                    <input type="hidden" name="RoNo" id="RoNo" value="<?php print($ro->DocumentNo);?>"/>
                 </select>
             </td>
             <td class="right">R/O No :</td>
@@ -118,7 +118,16 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             <td class="right">R/O Date :</td>
             <td><input type="text" class="easyui-datebox" style="width: 130px" id="RoDate" name="RoDate" data-options="formatter:myformatter,parser:myparser" required="required" value="<?php print($ro->FormatDate(SQL_DATEONLY));?>"/></td>
             <td class="right">Expected Date :</td>
-            <td><input type="text" class="easyui-datebox" style="width: 130px" id="ExpectedDate" name="ExpectedDate" data-options="formatter:myformatter,parser:myparser" required="required" value="<?php print($ro->FormatExpectedDate(SQL_DATEONLY));?>"/></td>
+            <td>
+                <input type="text" class="easyui-datebox" style="width: 130px" id="ExpectedDate" name="ExpectedDate" data-options="formatter:myformatter,parser:myparser" required="required" value="<?php print($ro->FormatExpectedDate(SQL_DATEONLY));?>"/>
+                &nbsp;
+                &nbsp;
+                <?php
+                if ($acl->CheckUserAccess("purchase.ro", "edit") && $ro->StatusCode == 1 && $ro->DocumentNo != null) {
+                    printf('<img src="%s" alt="Update RO Master" title="Update RO Master" id="bUpdate" style="cursor: pointer;"/>&nbsp;&nbsp;',$bsubmit);
+                }
+                ?>
+            </td>
         </tr>
         <tr>
             <td class="right">Notes :</td>
@@ -346,6 +355,32 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             }
         });
 
+        $("#bUpdate").click(function(e){
+            if (checkMaster()){
+                if (confirm('Update RO Master?')){
+                    var mPon = $("#RoNo").val();
+                    var mPri = $("#ProjectId").combobox('getValue');
+                    var mSpi = $("#SupplierId").combobox('getValue');
+                    var mNot = $("#Note").textbox('getValue');
+                    var mPdt = $("#RoDate").datebox('getValue');
+                    var mEdt = $("#ExpectedDate").datebox('getValue');
+                    var mPtr = $("#PaymentTerms").val();
+                    var mIsv = $("#IsVat").prop("checked") ? 1 : 0;
+                    var mIsi = $("#IsIncVat").prop("checked") ? 1 : 0;
+                    var urm = "<?php print($helper->site_url("purchase.ro/proses_master/")); ?>" + PoId;
+                    //proses simpan dan update master
+                    $.post(urm,{ProjectId: mPri, SupplierId: mSpi,Note: mNot, RoDate: mPdt, ExpectedDate: mEdt, RoNo: mPon, PaymentTerms: mPtr, IsVat: mIsv, IsIncVat: mIsi}, function( data ) {
+                        var rst = data.split('|');
+                        if (rst[0] == 'OK') {
+                            location.reload();
+                        }else{
+                            alert (data + ' - Update RO Master gagal!');
+                        }
+                    });
+                }
+            }
+        });
+
         $("#bAdDetail").click(function(e){
             newItem(0);
         });
@@ -420,7 +455,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
     function saveDetail(){
         PoId = $("#Id").val();
         var tMod = $("#aMode").val();
-        var mPon = $("#PoNo").val();
+        var mPon = $("#RoNo").val();
         var mPri = $("#ProjectId").combobox('getValue');
         var mSpi = $("#SupplierId").combobox('getValue');
         var mNot = $("#Note").textbox('getValue');
@@ -437,7 +472,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
         if (dIti > 0 && dQty > 0){
             var urm = "<?php print($helper->site_url("purchase.ro/proses_master/")); ?>" + PoId;
             //proses simpan dan update master
-            $.post(urm,{ProjectId: mPri, SupplierId: mSpi,Note: mNot, RoDate: mPdt, ExpectedDate: mEdt, PoNo: mPon, PaymentTerms: mPtr, IsVat: mIsv, IsIncVat: mIsi}, function( data ) {
+            $.post(urm,{ProjectId: mPri, SupplierId: mSpi,Note: mNot, RoDate: mPdt, ExpectedDate: mEdt, RoNo: mPon, PaymentTerms: mPtr, IsVat: mIsv, IsIncVat: mIsi}, function( data ) {
                 var rst = data.split('|');
                 if (rst[0] == 'OK') {
                     PoId = rst[2];

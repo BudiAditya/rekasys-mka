@@ -28,6 +28,9 @@ class Pr extends EntityBase {
     public $Approve2Time;
 
 	// Helper
+    public $QtyStatus = 0;
+    public $PrcStatus = 0;
+    public $SupStatus = 0;
 	/** @var PrDetail[] */
 	public $Details = array();
 	/** @var int[] */
@@ -70,6 +73,10 @@ class Pr extends EntityBase {
         $this->Approve2Time = strtotime($row["approve2_time"]);
 
 		$this->EntityCode = $row["entity_cd"];
+
+		$this->QtyStatus = $row["qty_status"];
+        $this->PrcStatus = $row["prc_status"];
+        $this->SupStatus = $row["sup_status"];
 	}
 
 	public function GetStatus() {
@@ -101,7 +108,7 @@ class Pr extends EntityBase {
             case 1:
                 return "NORMAL";
             case 2:
-                return "MIDDLE";
+                return "MEDIUM";
             case 3:
                 return "URGENT";
             default:
@@ -155,13 +162,10 @@ class Pr extends EntityBase {
 		if ($rs == null) {
 			return false;
 		}
-
-
 		while ($row = $rs->FetchAssoc()) {
 			$this->MrIds[] = $row["mr_id"];
 			$this->MrCodes[] = $row["doc_no"];
 		}
-
 		return true;
 	}
 
@@ -172,12 +176,10 @@ class Pr extends EntityBase {
 	public function LoadById($id) {
 		$this->connector->CommandText = "SELECT a.* FROM vw_ic_pr_master AS a  WHERE a.id = ?id";
 		$this->connector->AddParameter("?id", $id);
-
 		$rs = $this->connector->ExecuteQuery();
 		if ($rs == null || $rs->GetNumRows() == 0) {
 			return null;
 		}
-
 		$this->FillProperties($rs->FetchAssoc());
 		return $this;
 	}

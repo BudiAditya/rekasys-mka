@@ -118,7 +118,15 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             <td class="right">P/O Date :</td>
             <td><input type="text" class="easyui-datebox" style="width: 130px" id="PoDate" name="PoDate" data-options="formatter:myformatter,parser:myparser" required="required" value="<?php print($po->FormatDate(SQL_DATEONLY));?>"/></td>
             <td class="right">Expected Date :</td>
-            <td><input type="text" class="easyui-datebox" style="width: 130px" id="ExpectedDate" name="ExpectedDate" data-options="formatter:myformatter,parser:myparser" required="required" value="<?php print($po->FormatExpectedDate(SQL_DATEONLY));?>"/></td>
+            <td><input type="text" class="easyui-datebox" style="width: 130px" id="ExpectedDate" name="ExpectedDate" data-options="formatter:myformatter,parser:myparser" required="required" value="<?php print($po->FormatExpectedDate(SQL_DATEONLY));?>"/>
+                &nbsp;
+                &nbsp;
+                <?php
+                if ($acl->CheckUserAccess("purchase.po", "edit") && $po->StatusCode == 1 && $po->DocumentNo != null) {
+                    printf('<img src="%s" alt="Update PO Master" title="Update PO Master" id="bUpdate" style="cursor: pointer;"/>&nbsp;&nbsp;',$bsubmit);
+                }
+                ?>
+            </td>
         </tr>
         <tr>
             <td class="right">Notes :</td>
@@ -172,6 +180,8 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                         printf("<td class='right'>%s</td>",number_format($detail->Price,0));
                         printf("<td class='right'>%s</td>",number_format($detail->Qty * $detail->Price,0));
                         print("<td align='center'>");
+                        $dtx = addslashes($detail->Id.'|'.$detail->ItemId.'|'.$detail->ItemCode.'|'.$detail->PartNo.'|'.$detail->ItemName.'|'.$detail->UomCd.'|'.$detail->Qty.'|'.$detail->PrDetailId.'|'.$detail->PrNo.'|'.$detail->Price);
+                        printf('&nbsp<img src="%s" alt="Edit Item" title="Edit Item" style="cursor: pointer" onclick="return fEditDetail(%s);"/>',$bedit,"'".$dtx."'");
                         printf('&nbsp<img src="%s" alt="Hapus Item" title="Hapus Item" style="cursor: pointer" onclick="return fDelDetail(%s);"/>',$bclose,$detail->Id);
                         print("</td>");
                         print ("</tr>");
@@ -266,6 +276,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
                     <input type="hidden" name="aItemId" id="aItemId" value="0">
                     <input type="hidden" name="aPrDetailId" id="aPrDetailId" value="0">
                     <input type="hidden" name="aMode" id="aMode" value="N"/>
+                    <input type="hidden" name="xPoQty" id="xPoQty" value="0">
                 </td>
                 <td class="right">Price :</td>
                 <td><input type="text" class="easyui-textbox right" id="aPrice" name="aPrice" style="width:100px" value="0" required/></td>
@@ -346,6 +357,32 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             }
         });
 
+        $("#bUpdate").click(function(e){
+            if (checkMaster()){
+                if (confirm('Update PO Master?')){
+                    var mPon = $("#PoNo").val();
+                    var mPri = $("#ProjectId").combobox('getValue');
+                    var mSpi = $("#SupplierId").combobox('getValue');
+                    var mNot = $("#Note").textbox('getValue');
+                    var mPdt = $("#PoDate").datebox('getValue');
+                    var mEdt = $("#ExpectedDate").datebox('getValue');
+                    var mPtr = $("#PaymentTerms").val();
+                    var mIsv = $("#IsVat").prop("checked") ? 1 : 0;
+                    var mIsi = $("#IsIncVat").prop("checked") ? 1 : 0;
+                    var urm = "<?php print($helper->site_url("purchase.po/proses_master/")); ?>" + PoId;
+                    //proses simpan dan update master
+                    $.post(urm,{ProjectId: mPri, SupplierId: mSpi,Note: mNot, PoDate: mPdt, ExpectedDate: mEdt, PoNo: mPon, PaymentTerms: mPtr, IsVat: mIsv, IsIncVat: mIsi}, function( data ) {
+                        var rst = data.split('|');
+                        if (rst[0] == 'OK') {
+                            location.reload();
+                        }else{
+                            alert (data + ' - Update PO Master gagal!');
+                        }
+                    });
+                }
+            }
+        });
+
         $("#bAdDetail").click(function(e){
             newItem(0);
         });
@@ -391,6 +428,38 @@ $bpdf = base_url('public/images/button/').'pdf.png';
         }
     }
 
+    function fEditDetail(dta){
+        //$dtx = addslashes($detail->Id.'|'.$detail->ItemId.'|'.$detail->ItemCode.'|'.$detail->PartNo.'|'.$detail->ItemName.'|'.$detail->UomCd.'|'.$detail->Qty.'|'.$detail->MrDetailId);
+        var PoStatus = "<?php print($po->StatusCode);?>";
+        var dtx = dta.split('|');
+        var dId = dtx[0];
+        //alert("["+dId+"] Proses Edit detail!");
+        if (PoStatus == 1) {
+            $('#dlg').dialog('open').dialog('setTitle', 'Edit P/O Item - Ex. '+dtx[8]);
+            $('#fm').form('clear');
+            $('#aMode').val('E');
+            $('#aId').val(dtx[0]);
+            $('#aItemId').val(dtx[1]);
+            $('#aItemCode').textbox('setValue',dtx[2]);
+            $('#aPartNo').textbox('setValue',dtx[3]);
+            $('#aItemName').textbox('setValue',dtx[4]);
+            $('#aUomCd').textbox('setValue',dtx[5]);
+            $('#aPoQty').textbox('setValue',dtx[6]);
+            $('#aPrice').textbox('setValue',dtx[9]);
+            $('#xPoQty').val(dtx[6]);
+            $('#aPrDetailId').val(dtx[7]);
+            $('#aItemSearch').combobox({editable:false});
+            $('#aItemCode').textbox({editable:false});
+            $('#aPartNo').textbox({editable:false});
+            $('#aItemName').textbox({editable:false});
+            $('#aUomCd').textbox({editable:false});
+            $('#aPoQty').textbox({editable:true});
+            $('#aPoQty').focus();
+        }else{
+            alert ("Proses edit tidak diijinkan!");
+        }
+    }
+
     function fDelDetail(dId) {
         var PoStatus = "<?php print($po->StatusCode);?>";
         if (PoStatus == 1) {
@@ -431,42 +500,75 @@ $bpdf = base_url('public/images/button/').'pdf.png';
         var mIsi = $("#IsIncVat").prop("checked") ? 1 : 0;
         var dIti = $("#aItemId").val();
         var dQty = $("#aPoQty").textbox('getValue');
+        var xQty = $("#xPoQty").val();
         var dUom = $("#aUomCd").textbox('getValue');
         var dPrc = $("#aPrice").textbox('getValue');
         var dMdi = $("#aPrDetailId").val();
-        if (dIti > 0 && dQty > 0){
-            var urm = "<?php print($helper->site_url("purchase.po/proses_master/")); ?>" + PoId;
-            //proses simpan dan update master
-            $.post(urm,{ProjectId: mPri, SupplierId: mSpi,Note: mNot, PoDate: mPdt, ExpectedDate: mEdt, PoNo: mPon, PaymentTerms: mPtr, IsVat: mIsv, IsIncVat: mIsi}, function( data ) {
-                var rst = data.split('|');
-                if (rst[0] == 'OK') {
-                    PoId = rst[2];
-                    if (PoId > 0) {
-                        //proses simpan detail
-                        var aid = $("#aId").val();
-                        if (tMod == 'N') {
+        if (dIti > 0 && dQty > 0 && dPrc > 0){
+            if (tMod == 'N') {
+                var urm = "<?php print($helper->site_url("purchase.po/proses_master/")); ?>" + PoId;
+                //proses simpan dan update master
+                $.post(urm, {
+                    ProjectId: mPri,
+                    SupplierId: mSpi,
+                    Note: mNot,
+                    PoDate: mPdt,
+                    ExpectedDate: mEdt,
+                    PoNo: mPon,
+                    PaymentTerms: mPtr,
+                    IsVat: mIsv,
+                    IsIncVat: mIsi
+                }, function (data) {
+                    var rst = data.split('|');
+                    if (rst[0] == 'OK') {
+                        PoId = rst[2];
+                        if (PoId > 0) {
+                            //proses simpan detail
                             var urd = "<?php print($helper->site_url("purchase.po/add_detail/")); ?>" + PoId;
-                        } else {
-                            var urd = "<?php print($helper->site_url("purchase.po/edit_detail/")); ?>" + aid;
-                        }
-                        $.ajax({
-                            type : 'POST',
-                            url : urd,
-                            data: {aId: aid,aItemId: dIti, aPoQty: dQty, aUomCd: dUom, aPrDetailId: dMdi, aPrice: dPrc},
-                            success:function (data) {
-                                var rst = data.split('|');
-                                if (rst[0] == 'OK') {
-                                    location.href = "<?php print($helper->site_url("purchase.po/add/")); ?>" + PoId;
-                                }else {
-                                    alert(data);
+                            var aid = 0;
+                            $.ajax({
+                                type: 'POST',
+                                url: urd,
+                                data: {
+                                    aId: aid,
+                                    aItemId: dIti,
+                                    aPoQty: dQty,
+                                    aUomCd: dUom,
+                                    aPrDetailId: dMdi,
+                                    aPrice: dPrc
+                                },
+                                success: function (data) {
+                                    var rst = data.split('|');
+                                    if (rst[0] == 'OK') {
+                                        location.href = "<?php print($helper->site_url("purchase.po/add/")); ?>" + PoId;
+                                    } else {
+                                        alert(data);
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        }
+                    } else {
+                        alert(data);
                     }
-                }else{
-                    alert(data);
-                }
-            });
+                });
+            }else{
+                //update detail mode
+                var aid = $("#aId").val();
+                var urd = "<?php print($helper->site_url("purchase.po/edit_detail/")); ?>" + aid;
+                $.ajax({
+                    type: 'POST',
+                    url: urd,
+                    data: {aPoId: PoId, aId: aid, aItemId: dIti, aPoQty: dQty, aPrice: dPrc, aUomCd: dUom, aPrDetailId: dMdi, xPoQty: xQty,},
+                    success: function (data) {
+                        var rst = data.split('|');
+                        if (rst[0] == 'OK') {
+                            location.href = "<?php print($helper->site_url("purchase.po/add/")); ?>" + PoId;
+                        } else {
+                            alert(data);
+                        }
+                    }
+                });
+            }
         }else{
             alert("Detail Invalid!");
         }

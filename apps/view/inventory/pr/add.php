@@ -115,12 +115,31 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             <td><input type="text" class="f1 easyui-textbox" style="width: 130px" id="DocumentNo" name="DocumentNo" value="<?php print($pr->DocumentNo != null ? $pr->DocumentNo : '[AUTO]'); ?>" readonly/></td>
         </tr>
         <tr>
-            <td class="right">Notes :</td>
-            <td><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 250px; height: 40px;" value="<?php print($pr->Note);?>"></td>
+            <td rowspan="2" class="right">Notes :</td>
+            <td rowspan="2"><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 250px; height: 40px;" value="<?php print($pr->Note);?>"></td>
             <td class="right">P/R Date :</td>
             <td><input type="text" class="easyui-datebox" style="width: 130px" id="PrDate" name="PrDate" data-options="formatter:myformatter,parser:myparser" required="required" value="<?php print($pr->FormatDate(SQL_DATEONLY));?>"/></td>
             <td class="right">Status :</td>
             <td><input type="text" class="easyui-textbox" style="width: 130px" id="StatusCode" name="StatusCode" value="<?php print($pr->GetStatus());?>" disabled/></td>
+        </tr>
+        <tr>
+            <td class="right">Request Level :</td>
+            <td>
+                <select class="easyui-combobox" id="ReqLevel" name="ReqLevel" style="width: 130px" required>
+                    <option value="1" <?php print($pr->ReqLevel == 1 ? 'selected="selected"' : '');?>> 1 - Normal </option>
+                    <option value="2" <?php print($pr->ReqLevel == 2 ? 'selected="selected"' : '');?>> 2 - Medium </option>
+                    <option value="3" <?php print($pr->ReqLevel == 3 ? 'selected="selected"' : '');?>> 3 - Urgent </option>
+                </select>
+            </td>
+            <td class="center">
+                <?php
+                if ($acl->CheckUserAccess("inventory.pr", "edit") && $pr->StatusCode == 1 && $pr->DocumentNo != null) {
+                    printf('<img src="%s" alt="Update PR" title="Update PR" id="bUpdate" style="cursor: pointer;"/>&nbsp;&nbsp;',$bsubmit);
+                }else{
+                    print("&nbsp;");
+                }
+                ?>
+            </td>
         </tr>
         <tr>
             <td>&nbsp;</td>
@@ -344,6 +363,29 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             }
         });
 
+        $("#bUpdate").click(function(e){
+            if (checkMaster()){
+                if (confirm('Update PR Master?')) {
+                    var mPrn = $("#PrNo").val();
+                    var mPri = $("#ProjectId").combobox('getValue');
+                    var mDpi = $("#DeptId").combobox('getValue');
+                    var mNot = $("#Note").textbox('getValue');
+                    var mDte = $("#PrDate").datebox('getValue');
+                    var mRql = $("#ReqLevel").combobox('getValue');
+                    var urm = "<?php print($helper->site_url("inventory.pr/proses_master/")); ?>" + PrId;
+                    //proses simpan dan update master
+                    $.post(urm, {ProjectId: mPri, DeptId: mDpi, Note: mNot, PrDate: mDte, PrNo: mPrn, ReqLevel: mRql}, function (data) {
+                        var rst = data.split('|');
+                        if (rst[0] == 'OK') {
+                            location.reload();
+                        }else{
+                            alert(data + ' - Update Master PR Gagal!');
+                        }
+                    });
+                }
+            }
+        });
+
         $("#bAdDetail").click(function(e){
             newItem(0);
         });
@@ -454,6 +496,7 @@ $bpdf = base_url('public/images/button/').'pdf.png';
         var mDpi = $("#DeptId").combobox('getValue');
         var mNot = $("#Note").textbox('getValue');
         var mDte = $("#PrDate").datebox('getValue');
+        var mRql = $("#ReqLevel").combobox('getValue');
         var dIti = $("#aItemId").val();
         var dQty = $("#aPrQty").textbox('getValue');
         var xQty = $("#xPrQty").val();
@@ -463,13 +506,14 @@ $bpdf = base_url('public/images/button/').'pdf.png';
             if (tMod == 'N') {
                 var urm = "<?php print($helper->site_url("inventory.pr/proses_master/")); ?>" + PrId;
                 //proses simpan dan update master
-                $.post(urm, {ProjectId: mPri, DeptId: mDpi, Note: mNot, PrDate: mDte, PrNo: mPrn}, function (data) {
+                $.post(urm, {ProjectId: mPri, DeptId: mDpi, Note: mNot, PrDate: mDte, PrNo: mPrn, ReqLevel: mRql}, function (data) {
                     var rst = data.split('|');
                     if (rst[0] == 'OK') {
                         PrId = rst[2];
                         if (PrId > 0) {
                             //proses simpan detail
                             var urd = "<?php print($helper->site_url("inventory.pr/add_detail/")); ?>" + PrId;
+                            var aid = 0;
                             $.ajax({
                                 type: 'POST',
                                 url: urd,

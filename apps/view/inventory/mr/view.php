@@ -98,6 +98,14 @@ $bpdf = base_url('public/images/button/').'pdf.png';
         <tr>
             <td class="right">Notes :</td>
             <td colspan="3"><input type="text" class="easyui-textbox" name="Note" id="Note" data-options="multiline:true" style="width: 460px; height: 35px;" value="<?php print($mr->Note);?>" readonly></td>
+            <td class="right">Request Level :</td>
+            <td colspan="2">
+                <select class="easyui-combobox" id="ReqLevel" name="ReqLevel" style="width: 200px" disabled>
+                    <option value="1" <?php print($mr->ReqLevel == 1 ? 'selected="selected"' : '');?>> 1 - Normal </option>
+                    <option value="2" <?php print($mr->ReqLevel == 2 ? 'selected="selected"' : '');?>> 2 - Medium </option>
+                    <option value="3" <?php print($mr->ReqLevel == 3 ? 'selected="selected"' : '');?>> 3 - Urgent </option>
+                </select>
+            </td>
         </tr>
         <tr>
             <td>&nbsp;</td>

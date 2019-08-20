@@ -23,10 +23,10 @@ class PrController extends AppController {
         $settings["columns"][] = array("name" => "a.project_name", "display" => "Project", "width" => 100);
         $settings["columns"][] = array("name" => "a.dept_name", "display" => "Dept", "width" => 150);
 		$settings["columns"][] = array("name" => "a.doc_no", "display" => "PR Number", "width" => 120);
-		$settings["columns"][] = array("name" => "DATE_FORMAT(a.pr_date, '%d %M %Y')", "display" => "PR Date", "width" => 100, "sortable" => false);
+		$settings["columns"][] = array("name" => "DATE_FORMAT(a.pr_date, '%d-%m-%Y')", "display" => "PR Date", "width" => 80, "sortable" => false);
 		$settings["columns"][] = array("name" => "c.short_desc", "display" => "Req Level", "width" => 100);
         $settings["columns"][] = array("name" => "b.short_desc", "display" => "Status", "width" => 100);
-		$settings["columns"][] = array("name" => "DATE_FORMAT(a.update_time, '%d %M %Y')", "display" => "Last Update", "width" => 100, "sortable" => false);
+		$settings["columns"][] = array("name" => "DATE_FORMAT(a.update_time, '%d-%m-%Y')", "display" => "Last Update", "width" => 80, "sortable" => false);
 
 		$settings["filters"][] = array("name" => "a.doc_no", "display" => "PR Number");
 		$settings["filters"][] = array("name" => "b.short_desc", "display" => "Status");
@@ -352,6 +352,7 @@ class PrController extends AppController {
             $pr->Date = strtotime($this->GetPostValue("PrDate"));
             $pr->DeptId = $this->GetPostValue("DeptId");
             $pr->Note = $this->GetPostValue("Note");
+            $pr->ReqLevel = $this->GetPostValue("ReqLevel");
             $pr->DocumentNo = $this->GetPostValue("PrNo");
             $pr->CreatedById = $this->userUid;
             if ($pr->Id == 0) {
